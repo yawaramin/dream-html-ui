@@ -58,41 +58,15 @@
     #list = null;
 
     static get observedAttributes() {
-      return ['form', 'key', 'list', 'value'];
+      return ['list'];
     }
 
-    attributeChangedCallback(name, oldValue, newValue) {
+    attributeChangedCallback(name, _oldValue, newValue) {
       switch (name) {
-        case 'form':
-          this.querySelector('input').setAttribute('form', newValue);
-          break;
-
-        case 'key':
-          this.key = newValue;
-          break;
-
         case 'list':
           this.listId = newValue;
           break;
-
-        case 'value':
-          this.querySelector('input').setAttribute('value', newValue);
-          break;
       }
-    }
-
-    set key(value) {
-      if (value == null) {
-        return;
-      }
-
-      const inp = this.querySelector('input');
-      inp.id = value;
-      inp.name = value;
-
-      const menuId = `${value}-dropdown-menu`;
-      inp.setAttribute('aria-controls', menuId);
-      this.querySelector('.dropdown-menu').id = menuId;
     }
 
     set listId(value) {
@@ -163,8 +137,6 @@
 
       if (listId != null) {
         this.#listObserver = new MutationObserver(mutations => {
-          this.loading = true;
-
           for (const mutation of mutations) {
             switch (mutation.type) {
               case 'attributes':
@@ -202,15 +174,12 @@
                 break;
             }
           }
-
-          this.loading = false;
         });
       }
     }
 
     connectedCallback() {
       const inp = this.querySelector('input');
-      this.key = this.getAttribute('key');
 
       const items = this.querySelectorAll('a.dropdown-item');
       this.#numItems = items.length;
