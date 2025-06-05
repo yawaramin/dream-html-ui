@@ -5,6 +5,12 @@
   const UP_ARROW = 38;
   const DOWN_ARROW = 40;
 
+  /** @type {<A>(a: A | null) => A} */
+  function notNull(value) {
+    if (value == null) throw TypeError('Value is null or undefined');
+    return value;
+  }
+
   function loading(el) {
     el?.classList.add('is-loading');
   }
@@ -52,9 +58,15 @@
   }
 
   customElements.define('combo-box', class extends HTMLElement {
+    /** @type {HTMLAnchorElement | null} */
     #selected = null;
+
     #numItems = 0;
+
+    /** @type {MutationObserver | null} */
     #listObserver = null;
+
+    /** @type {string | null} */
     #list = null;
 
     static get observedAttributes() {
@@ -75,22 +87,12 @@
       }
 
       this.#list = value;
-      const dropdownContent = this.querySelector('.dropdown-content');
       const options = document.querySelectorAll(`#${value} > option`);
 
       this.loading = true;
-      dropdownContent.textContent = '';
+      this.dropdownContent.textContent = '';
       for (const option of options) {
-        dropdownContent.appendChild(h({
-          tag: 'a',
-          attrs: {
-            class: 'dropdown-item',
-            tabindex: this.#numItems++,
-            'data-value': option.value,
-            role: 'menuitem',
-          },
-          children: [option.textContent || option.value],
-        }));
+        this.addItem(option.value, option.textContent || option.value, this.#numItems++);
       }
       this.loading = false;
 
@@ -125,14 +127,31 @@
       }
     }
 
-    shownItems() {
+    /** @type {HTMLDivElement} */
+    get dropdownContent() {
+      return notNull(this.querySelector('.dropdown-content'));
+    }
+
+    get shownItems() {
       return this.querySelectorAll('a.dropdown-item:not(.is-hidden)');
+    }
+
+    addItem(value, text, tabIndex) {
+      this.dropdownContent.appendChild(h({
+        tag: 'a',
+        attrs: {
+          class: 'dropdown-item',
+          tabindex: tabIndex,
+          'data-value': value,
+          role: 'menuitem',
+        },
+        children: [text],
+      }));
     }
 
     constructor() {
       super();
 
-      const dropdownContent = this.querySelector('.dropdown-content');
       const listId = this.getAttribute('list');
 
       if (listId != null) {
@@ -152,22 +171,14 @@
               case 'childList':
                 for (const addedNode of mutation.addedNodes) {
                   if (addedNode.nodeName == 'OPTION') {
-                    dropdownContent.appendChild(h({
-                      tag: 'a',
-                      attrs: {
-                        class: 'dropdown-item',
-                        tabindex: this.#numItems++,
-                        'data-value': addedNode.value,
-                      },
-                      children: [addedNode.textContent || addedNode.value],
-                    }));
+                    this.addItem(addedNode.value, addedNode.textContent || addedNode.value, this.#numItems++);
                   }
                 }
 
                 for (const removedNode of mutation.removedNodes) {
                   if (removedNode.nodeName == 'OPTION') {
                     const nodeValue = removedNode.getAttribute('value');
-                    dropdownContent.removeChild(this.querySelector(`a.dropdown-item[data-value="${nodeValue}"]`));
+                    this.querySelector('.dropdown-content').removeChild(this.querySelector(`a.dropdown-item[data-value="${nodeValue}"]`));
                   }
                 }
 
@@ -202,7 +213,7 @@
             break;
 
           case DOWN_ARROW:
-            const shownItems = this.shownItems();
+            const shownItems = this.shownItems;
 
             if (shownItems.length > 0) {
               shownItems[0].focus();
@@ -256,7 +267,7 @@
         item.addEventListener('keydown', evt => {
           switch (evt.keyCode) {
             case DOWN_ARROW:
-              for (const it of this.shownItems()) {
+              for (const it of this.shownItems) {
                 if (it.tabIndex > item.tabIndex) {
                   it.focus();
                   return;
@@ -265,7 +276,7 @@
               break;
 
             case UP_ARROW:
-              const visibleItems = this.shownItems();
+              const visibleItems = this.shownItems;
 
               for (let idx = visibleItems.length - 1; idx >= 0; idx--) {
                 if (visibleItems[idx].tabIndex < item.tabIndex) {
