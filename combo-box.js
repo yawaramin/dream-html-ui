@@ -132,10 +132,12 @@
       return notNull(this.querySelector('.dropdown-content'));
     }
 
+    /** @type {NodeListOf<HTMLAnchorElement>} */
     get shownItems() {
       return this.querySelectorAll('a.dropdown-item:not(.is-hidden)');
     }
 
+    /** @type {(value: string, text: string, tabIndex: number) => void} */
     addItem(value, text, tabIndex) {
       this.dropdownContent.appendChild(h({
         tag: 'a',
@@ -190,9 +192,11 @@
     }
 
     connectedCallback() {
-      const inp = this.querySelector('input');
+      const inp = notNull(this.querySelector('input'));
 
+      /** @type {NodeListOf<HTMLAnchorElement>} */
       const items = this.querySelectorAll('a.dropdown-item');
+
       this.#numItems = items.length;
 
       inp.addEventListener('click', () => {
@@ -233,7 +237,7 @@
         }
 
         for (const item of items) {
-          if (item.textContent.toLowerCase().includes(inp.value.toLowerCase())) {
+          if (notNull(item.textContent).toLowerCase().includes(inp.value.toLowerCase())) {
             show(item);
           } else {
             hide(item);
@@ -256,7 +260,7 @@
 
         item.addEventListener('click', evt => {
           evt.preventDefault();
-          inp.value = item.getAttribute('data-value');
+          inp.value = notNull(item.getAttribute('data-value'));
 
           deactivate(this.#selected);
           activate(item);
@@ -302,9 +306,9 @@
     }
   });
 
-  document.addEventListener('click', () => {
+  document.addEventListener('click', evt => {
     for (const combo of document.querySelectorAll('combo-box')) {
-      if (!combo.contains(event.target)) {
+      if (evt.target == null || !combo.contains(evt.target)) {
         combo.active = false;
       }
     }
