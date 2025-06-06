@@ -11,34 +11,49 @@
     return value;
   }
 
+  /** @type {(el: Element | null) => void} */
   function loading(el) {
     el?.classList.add('is-loading');
   }
 
+  /** @type {(el: Element | null) => void} */
   function loaded(el) {
     el?.classList.remove('is-loading');
   }
 
+  /** @type {(el: Element | null) => void} */
   function hide(el) {
     el?.classList.add('is-hidden');
   }
 
+  /** @type {(el: Element | null) => void} */
   function show(el) {
     el?.classList.remove('is-hidden');
   }
 
+  /** @type {(el: Element | null) => void} */
   function activate(el) {
     el?.classList.add(IS_ACTIVE);
   }
 
+  /** @type {(el: Element | null) => void} */
   function deactivate(el) {
     el?.classList.remove(IS_ACTIVE);
   }
 
+  /** @type {(el: Element | null) => boolean} */
   function isActive(el) {
-    return el?.classList.contains(IS_ACTIVE);
+    return el != null && el.classList.contains(IS_ACTIVE);
   }
 
+  /**
+   * @typedef {object} HObj
+   * @prop {string} tag
+   * @prop {Record<string, string>} attrs
+   * @prop {Array<string | HObj>} children
+   */
+
+  /** @type {(obj: string | HObj) => Element | Text} */
   function h(obj) {
     if (typeof (obj) == 'string') {
       return document.createTextNode(obj);
@@ -87,11 +102,10 @@
       }
 
       this.#list = value;
-      const options = document.querySelectorAll(`#${value} > option`);
 
       this.loading = true;
       this.dropdownContent.textContent = '';
-      for (const option of options) {
+      for (const option of this.listOptions) {
         this.addItem(option.value, option.textContent || option.value, this.#numItems++);
       }
       this.loading = false;
@@ -137,13 +151,18 @@
       return this.querySelectorAll('a.dropdown-item:not(.is-hidden)');
     }
 
+    /** @type {NodeListOf<HTMLOptionElement>} */
+    get listOptions() {
+      return document.querySelectorAll(`#${this.#list} > option`);
+    }
+
     /** @type {(value: string, text: string, tabIndex: number) => void} */
     addItem(value, text, tabIndex) {
       this.dropdownContent.appendChild(h({
         tag: 'a',
         attrs: {
           class: 'dropdown-item',
-          tabindex: tabIndex,
+          tabindex: tabIndex.toString(),
           'data-value': value,
           role: 'menuitem',
         },
@@ -307,8 +326,12 @@
   });
 
   document.addEventListener('click', evt => {
+    if (evt.target == null) {
+      return;
+    }
+
     for (const combo of document.querySelectorAll('combo-box')) {
-      if (evt.target == null || !combo.contains(evt.target)) {
+      if (!combo.contains(evt.target)) {
         combo.active = false;
       }
     }
