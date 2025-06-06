@@ -72,6 +72,18 @@
     return elem;
   }
 
+  document.addEventListener('click', evt => {
+    if (evt.target == null) {
+      return;
+    }
+
+    for (const dropdown of document.querySelectorAll('.dropdown')) {
+      if (!dropdown.contains(evt.target)) {
+        deactivate(dropdown);
+      }
+    }
+  })
+
   customElements.define('combo-box', class extends HTMLElement {
     /** @type {HTMLAnchorElement | null} */
     #selected = null;
@@ -111,7 +123,7 @@
       this.loading = false;
 
       this.#listObserver?.disconnect();
-      this.#listObserver?.observe(document.getElementById(value), {
+      this.#listObserver?.observe(notNull(document.getElementById(value)), {
         attributes: true,
         attributeFilter: ['value'],
         attributeOldValue: true,
@@ -120,14 +132,7 @@
       });
     }
 
-    set active(value) {
-      if (value) {
-        activate(this);
-      } else {
-        deactivate(this);
-      }
-    }
-
+    /** @type {(value: boolean) => void} */
     set loading(value) {
       const trigger = this.querySelector('.dropdown-trigger');
       const icon = this.querySelector('.icon');
@@ -163,7 +168,7 @@
         attrs: {
           class: 'dropdown-item',
           tabindex: tabIndex.toString(),
-          'data-value': value,
+          value,
           role: 'menuitem',
         },
         children: [text],
@@ -181,9 +186,9 @@
             switch (mutation.type) {
               case 'attributes':
                 if (mutation.target.nodeName == 'OPTION' && mutation.attributeName == 'value') {
-                  const item = this.querySelector(`a.dropdown-item[data-value="${mutation.oldValue}"]`);
+                  const item = notNull(this.querySelector(`a.dropdown-item[value="${mutation.oldValue}"]`));
 
-                  item.setAttribute('data-value', mutation.target.value);
+                  item.setAttribute('value', mutation.target.value);
                   item.textContent = mutation.target.textContent || mutation.target.value;
                 }
 
@@ -199,7 +204,7 @@
                 for (const removedNode of mutation.removedNodes) {
                   if (removedNode.nodeName == 'OPTION') {
                     const nodeValue = removedNode.getAttribute('value');
-                    this.querySelector('.dropdown-content').removeChild(this.querySelector(`a.dropdown-item[data-value="${nodeValue}"]`));
+                    this.querySelector('.dropdown-content').removeChild(this.querySelector(`a.dropdown-item[value="${nodeValue}"]`));
                   }
                 }
 
@@ -279,7 +284,7 @@
 
         item.addEventListener('click', evt => {
           evt.preventDefault();
-          inp.value = notNull(item.getAttribute('data-value'));
+          inp.value = notNull(item.getAttribute('value'));
 
           deactivate(this.#selected);
           activate(item);
@@ -309,6 +314,7 @@
               }
 
               inp.focus();
+              inp.select();
               break;
 
             case ESC:
@@ -324,16 +330,4 @@
       }
     }
   });
-
-  document.addEventListener('click', evt => {
-    if (evt.target == null) {
-      return;
-    }
-
-    for (const combo of document.querySelectorAll('combo-box')) {
-      if (!combo.contains(evt.target)) {
-        combo.active = false;
-      }
-    }
-  })
 })();
