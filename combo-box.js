@@ -1,9 +1,14 @@
 (() => {
   const IS_ACTIVE = 'is-active';
-  const TAB = 9;
-  const ESC = 27;
-  const UP_ARROW = 38;
-  const DOWN_ARROW = 40;
+  const IS_LOADING = 'is-loading';
+  const TAB = 'Tab';
+  const ESC = 'Escape';
+  const UP_ARROW = 'ArrowUp';
+  const DOWN_ARROW = 'ArrowDown';
+
+  if (window.hasOwnProperty('htmx')) {
+    htmx.config.requestClass = IS_LOADING;
+  }
 
   /** @type {<A>(a: A | null) => A} */
   function notNull(value) {
@@ -13,12 +18,12 @@
 
   /** @type {(el: Element | null) => void} */
   function loading(el) {
-    el?.classList.add('is-loading');
+    el?.classList.add(IS_LOADING);
   }
 
   /** @type {(el: Element | null) => void} */
   function loaded(el) {
-    el?.classList.remove('is-loading');
+    el?.classList.remove(IS_LOADING);
   }
 
   /** @type {(el: Element | null) => void} */
@@ -230,7 +235,7 @@
       });
 
       inp.addEventListener('keydown', evt => {
-        switch (evt.keyCode) {
+        switch (evt.key) {
           case ESC:
             inp.blur();
             deactivate(this);
@@ -293,7 +298,7 @@
         });
 
         item.addEventListener('keydown', evt => {
-          switch (evt.keyCode) {
+          switch (evt.key) {
             case DOWN_ARROW:
               for (const it of this.shownItems) {
                 if (it.tabIndex > item.tabIndex) {
@@ -321,8 +326,8 @@
               deactivate(this);
               break;
 
-            case 13: // Enter
-            case 32: // Space
+            case 'Enter':
+            case ' ':
               item.click();
               break;
           }
