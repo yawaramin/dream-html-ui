@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Datepicker</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.4/css/bulma.min.css">
+  <style>
+    date-picker .table {
+      --bulma-table-cell-border-width: 0;
+      --bulma-table-head-cell-border-width: 0;
+      --bulma-table-cell-padding: 0;
+    }
+
+    date-picker .table.is-narrow td,
+    date-picker .table.is-narrow th {
+      padding: 0;
+    }
+  </style>
+</head>
+
+<body>
+  <main class="m-4">
+    <h1 class="is-size-1">Datepicker</h1>
+    <div class="field is-horizontal">
+      <div class="field-label">
+        <label class="label" for="start-date">Start Date</label>
+      </div>
+      <div class="field-body">
+        <div class="field">
+          <date-picker class="dropdown is-active">
+            <div class="control dropdown-trigger has-icons-left">
+              <input class=input aria-haspopup=true aria-controls="start-date-dropdown-menu" name="start-date"
+                id="start-date" value="2025-06-07">
+              <span class="icon is-small is-left">🗓️</span>
+            </div>
+            <div class="dropdown-menu" id="start-date-dropdown-menu" role="menu">
+              <div class="dropdown-content">
+                <div class="dropdown-item" role="menuitem">
+                  <div class="block">
+                    <div class="field is-grouped">
+                      <p class="control">
+                        <button class="button" title="Previous month"><span class="icon is-small">◀️</span></button>
+                      </p>
+                      <p class="control is-flex is-flex-grow-1">
+                        <button class="button is-flex-grow-1">June 2025</button>
+                      </p>
+                      <p class="control">
+                        <button class="button" title="Next month"><span class="icon is-small">▶️</span></button>
+                      </p>
+                    </div>
+                  </div>
+                  <table class="block table is-narrow">
+                    <thead>
+                      <th class="has-text-right pr-3">M</th>
+                      <th class="has-text-right pr-3">T</th>
+                      <th class="has-text-right pr-3">W</th>
+                      <th class="has-text-right pr-3">T</th>
+                      <th class="has-text-right pr-3">F</th>
+                      <th class="has-text-right pr-3">S</th>
+                      <th class="has-text-right pr-3">S</th>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td class="has-text-right"><button
+                            class="button cell is-light is-small is-fullwidth">26</button></td>
+                        <td class="has-text-right"><button
+                            class="button cell is-light is-small is-fullwidth">27</button></td>
+                        <td class="has-text-right"><button
+                            class="button cell is-light is-small is-fullwidth">28</button></td>
+                        <td class="has-text-right"><button
+                            class="button cell is-light is-small is-fullwidth">29</button></td>
+                        <td class="has-text-right"><button
+                            class="button cell is-light is-small is-fullwidth">30</button></td>
+                        <td class="has-text-right"><button
+                            class="button cell is-light is-small is-fullwidth">31</button></td>
+                        <td class="has-text-right"><button class="button cell is-white is-small is-fullwidth">1</button>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td class="has-text-right"><button class="button cell is-white is-small is-fullwidth">2</button>
+                        </td>
+                        <td class="has-text-right"><button class="button cell is-white is-small is-fullwidth">3</button>
+                        </td>
+                        <td class="has-text-right"><button class="button cell is-white is-small is-fullwidth">4</button>
+                        </td>
+                        <td class="has-text-right"><button class="button cell is-white is-small is-fullwidth">5</button>
+                        </td>
+                        <td class="has-text-right"><button class="button cell is-white is-small is-fullwidth">6</button>
+                        </td>
+                        <td class="has-text-right"><button
+                            class="button cell is-info is-active is-small is-fullwidth">7</button>
+                        </td>
+                        <td class="has-text-right"><button class="button cell is-white is-small is-fullwidth">8</button>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td class="has-text-right"><button class="button cell is-white is-small is-fullwidth">9</button>
+                        </td>
+                        <td class="has-text-right"><button
+                            class="button cell is-white is-small is-fullwidth">10</button></td>
+                        <td class="has-text-right"><button
+                            class="button cell is-white is-small is-fullwidth">11</button></td>
+                        <td class="has-text-right"><button
+                            class="button cell is-white is-small is-fullwidth">12</button></td>
+                        <td class="has-text-right"><button
+                            class="button cell is-white is-small is-fullwidth">13</button></td>
+                        <td class="has-text-right"><button
+                            class="button cell is-white is-small is-fullwidth">14</button></td>
+                        <td class="has-text-right"><button
+                            class="button cell is-white is-small is-fullwidth">15</button></td>
+                      </tr>
+                      <tr>
+                        <td class="has-text-right"><button
+                            class="button cell is-white is-small is-fullwidth">16</button></td>
+                        <td class="has-text-right"><button
+                            class="button cell is-white is-small is-fullwidth">17</button></td>
+                        <td class="has-text-right"><button
+                            class="button cell is-white is-small is-fullwidth">18</button></td>
+                        <td class="has-text-right"><button
+                            class="button cell is-white is-small is-fullwidth">19</button></td>
+                        <td class="has-text-right"><button
+                            class="button cell is-white is-small is-fullwidth">20</button></td>
+                        <td class="has-text-right"><button
+                            class="button cell is-white is-small is-fullwidth">21</button></td>
+                        <td class="has-text-right"><button
+                            class="button cell is-white is-small is-fullwidth">22</button></td>
+                      </tr>
+                      <tr>
+                        <td class="has-text-right"><button
+                            class="button cell is-white is-small is-fullwidth">23</button></td>
+                        <td class="has-text-right"><button
+                            class="button cell is-white is-small is-fullwidth">24</button></td>
+                        <td class="has-text-right"><button
+                            class="button cell is-white is-small is-fullwidth">25</button></td>
+                        <td class="has-text-right"><button
+                            class="button cell is-white is-small is-fullwidth">26</button></td>
+                        <td class="has-text-right"><button
+                            class="button cell is-white is-small is-fullwidth">27</button></td>
+                        <td class="has-text-right"><button
+                            class="button cell is-white is-small is-fullwidth">28</button></td>
+                        <td class="has-text-right"><button
+                            class="button cell is-white is-small is-fullwidth">29</button></td>
+                      </tr>
+                      <tr>
+                        <td class="has-text-right"><button
+                            class="button cell is-white is-small is-fullwidth">30</button></td>
+                        <td class="has-text-right"><button class="button cell is-light is-small is-fullwidth">1</button>
+                        </td>
+                        <td class="has-text-right"><button class="button cell is-light is-small is-fullwidth">2</button>
+                        </td>
+                        <td class="has-text-right"><button class="button cell is-light is-small is-fullwidth">3</button>
+                        </td>
+                        <td class="has-text-right"><button class="button cell is-light is-small is-fullwidth">4</button>
+                        </td>
+                        <td class="has-text-right"><button class="button cell is-light is-small is-fullwidth">5</button>
+                        </td>
+                        <td class="has-text-right"><button class="button cell is-light is-small is-fullwidth">6</button>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </date-picker>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- <script src="lib.js"></script> -->
+</body>
+
+</html>

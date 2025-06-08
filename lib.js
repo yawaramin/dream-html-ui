@@ -336,3 +336,10 @@
     }
   });
 })();
+
+/*
+const headerFmt = new Intl.DateTimeFormat(navigator.language, {month: 'long', year: 'numeric'});
+const now = new Date();
+const locale = new Intl.Locale(navigator.language);
+const weekInfo = locale.getWeekInfo();
+*/
