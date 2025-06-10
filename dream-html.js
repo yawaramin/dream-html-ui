@@ -94,11 +94,6 @@
   })
 
   customElements.define('dh-combobox', class extends HTMLElement {
-    /** @type {HTMLButtonElement | null} */
-    #selected = null;
-
-    #numItems = 0;
-
     /** @type {MutationObserver | null} */
     #listObserver = null;
 
@@ -126,8 +121,10 @@
 
       this.loading = true;
       this.dropdownContent.textContent = '';
+      let numItems = 0;
+
       for (const option of this.listOptions) {
-        this.addItem(option.value, option.textContent || option.value, this.#numItems++);
+        this.addItem(option.value, option.textContent || option.value, numItems++);
       }
       this.loading = false;
 
@@ -160,7 +157,12 @@
       return notNull(this.querySelector('.dropdown-content'));
     }
 
-    /** @type {NodeListOf<HTMLAnchorElement>} */
+    /** @type {HTMLButtonElement | null} */
+    get selectedItem() {
+      return this.querySelector(`.dropdown-item.${IS_ACTIVE}`);
+    }
+
+    /** @type {NodeListOf<HTMLButtonElement>} */
     get shownItems() {
       return this.querySelectorAll('button.dropdown-item:not(.is-hidden)');
     }
@@ -204,9 +206,11 @@
                 break;
 
               case 'childList':
+                let numItems = 0;
+
                 for (const addedNode of mutation.addedNodes) {
                   if (addedNode.nodeName == 'OPTION') {
-                    this.addItem(addedNode.value, addedNode.textContent || addedNode.value, this.#numItems++);
+                    this.addItem(addedNode.value, addedNode.textContent || addedNode.value, numItems++);
                   }
                 }
 
@@ -230,9 +234,7 @@
       /** @type {NodeListOf<HTMLAnchorElement>} */
       const items = this.querySelectorAll('button.dropdown-item');
 
-      this.#numItems = items.length;
-
-      inp.addEventListener('click', () => {
+      inp.addEventListener('focus', () => {
         if (!isActive(this)) {
           activate(this);
         }
@@ -264,10 +266,7 @@
           activate(this);
         }
 
-        if (isActive(this.#selected)) {
-          deactivate(this.#selected);
-          this.#selected = null;
-        }
+        deactivate(this.selectedItem);
 
         for (const item of items) {
           if (notNull(item.textContent).toLowerCase().includes(inp.value.toLowerCase())) {
@@ -277,30 +276,27 @@
           }
 
           if (item.textContent == inp.value) {
-            deactivate(this.#selected);
             activate(item);
-            this.#selected = item;
           }
         }
       });
 
-      for (const item of items) {
-        item.role = 'menuitem';
+      const content = this.dropdownContent;
 
-        if (isActive(item)) {
-          this.#selected = item;
-        }
+      content.addEventListener('click', evt => {
+        if (evt.target?.nodeName == 'BUTTON') {
+          const item = notNull(evt.target);
 
-        item.addEventListener('click', evt => {
           evt.preventDefault();
           inp.value = notNull(item.getAttribute('value'));
 
-          deactivate(this.#selected);
+          deactivate(this.selectedItem);
           activate(item);
-          this.#selected = item;
           deactivate(this);
-        });
+        }
+      });
 
+      for (const item of items) {
         item.addEventListener('keydown', evt => {
           switch (evt.key) {
             case DOWN_ARROW:
