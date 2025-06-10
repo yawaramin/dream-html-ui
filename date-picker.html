@@ -9,8 +9,12 @@
   <style>
     date-picker .table {
       --bulma-table-cell-border-width: 0;
-      --bulma-table-head-cell-border-width: 0;
       --bulma-table-cell-padding: 0;
+      --bulma-table-cell-border-color: var(--bulma-table-background-color);
+
+      & .button {
+        border-radius: 0;
+      }
     }
 
     date-picker .table.is-narrow td,
@@ -41,13 +45,13 @@
                   <div class="block">
                     <div class="field is-grouped">
                       <p class="control">
-                        <button class="button" title="Previous month"><span class="icon is-small">◀️</span></button>
+                        <button class="button" title="May 2025"><span class="icon is-small">◀️</span></button>
                       </p>
                       <p class="control is-flex is-flex-grow-1">
                         <button class="button is-flex-grow-1">June 2025</button>
                       </p>
                       <p class="control">
-                        <button class="button" title="Next month"><span class="icon is-small">▶️</span></button>
+                        <button class="button" title="July 2025"><span class="icon is-small">▶️</span></button>
                       </p>
                     </div>
                   </div>
@@ -63,104 +67,89 @@
                     </thead>
                     <tbody>
                       <tr>
-                        <td class="has-text-right"><button
-                            class="button cell is-light is-small is-fullwidth">26</button></td>
-                        <td class="has-text-right"><button
-                            class="button cell is-light is-small is-fullwidth">27</button></td>
-                        <td class="has-text-right"><button
-                            class="button cell is-light is-small is-fullwidth">28</button></td>
-                        <td class="has-text-right"><button
-                            class="button cell is-light is-small is-fullwidth">29</button></td>
-                        <td class="has-text-right"><button
-                            class="button cell is-light is-small is-fullwidth">30</button></td>
-                        <td class="has-text-right"><button
-                            class="button cell is-light is-small is-fullwidth">31</button></td>
-                        <td class="has-text-right"><button class="button cell is-white is-small is-fullwidth">1</button>
+                        <td><button class="button cell is-light is-small is-fullwidth">26</button></td>
+                        <td><button class="button cell is-light is-small is-fullwidth">27</button></td>
+                        <td><button class="button cell is-light is-small is-fullwidth">28</button></td>
+                        <td><button class="button cell is-light is-small is-fullwidth">29</button></td>
+                        <td><button class="button cell is-light is-small is-fullwidth">30</button></td>
+                        <td><button class="button cell is-light is-small is-fullwidth">31</button></td>
+                        <td><button class="button cell is-white is-small is-fullwidth">1</button>
                         </td>
                       </tr>
                       <tr>
-                        <td class="has-text-right"><button class="button cell is-white is-small is-fullwidth">2</button>
+                        <td><button class="button cell is-white is-small is-fullwidth">2</button>
                         </td>
-                        <td class="has-text-right"><button class="button cell is-white is-small is-fullwidth">3</button>
+                        <td><button class="button cell is-white is-small is-fullwidth">3</button>
                         </td>
-                        <td class="has-text-right"><button class="button cell is-white is-small is-fullwidth">4</button>
+                        <td><button class="button cell is-white is-small is-fullwidth">4</button>
                         </td>
-                        <td class="has-text-right"><button class="button cell is-white is-small is-fullwidth">5</button>
+                        <td><button class="button cell is-white is-small is-fullwidth">5</button>
                         </td>
-                        <td class="has-text-right"><button class="button cell is-white is-small is-fullwidth">6</button>
+                        <td><button class="button cell is-white is-small is-fullwidth">6</button>
                         </td>
-                        <td class="has-text-right"><button
-                            class="button cell is-info is-active is-small is-fullwidth">7</button>
+                        <td><button class="button cell is-info is-active is-small is-fullwidth">7</button>
                         </td>
-                        <td class="has-text-right"><button class="button cell is-white is-small is-fullwidth">8</button>
+                        <td><button class="button cell is-white is-small is-fullwidth">8</button>
                         </td>
                       </tr>
                       <tr>
-                        <td class="has-text-right"><button class="button cell is-white is-small is-fullwidth">9</button>
+                        <td><button class="button cell is-white is-small is-fullwidth">9</button>
                         </td>
-                        <td class="has-text-right"><button
-                            class="button cell is-white is-small is-fullwidth">10</button></td>
-                        <td class="has-text-right"><button
-                            class="button cell is-white is-small is-fullwidth">11</button></td>
-                        <td class="has-text-right"><button
-                            class="button cell is-white is-small is-fullwidth">12</button></td>
-                        <td class="has-text-right"><button
-                            class="button cell is-white is-small is-fullwidth">13</button></td>
-                        <td class="has-text-right"><button
-                            class="button cell is-white is-small is-fullwidth">14</button></td>
-                        <td class="has-text-right"><button
-                            class="button cell is-white is-small is-fullwidth">15</button></td>
+                        <td><button class="button cell is-white is-small is-fullwidth">10</button></td>
+                        <td><button class="button cell is-white is-small is-fullwidth">11</button></td>
+                        <td><button class="button cell is-white is-small is-fullwidth">12</button></td>
+                        <td><button class="button cell is-white is-small is-fullwidth">13</button></td>
+                        <td><button class="button cell is-white is-small is-fullwidth">14</button></td>
+                        <td><button class="button cell is-white is-small is-fullwidth">15</button></td>
                       </tr>
                       <tr>
-                        <td class="has-text-right"><button
-                            class="button cell is-white is-small is-fullwidth">16</button></td>
-                        <td class="has-text-right"><button
-                            class="button cell is-white is-small is-fullwidth">17</button></td>
-                        <td class="has-text-right"><button
-                            class="button cell is-white is-small is-fullwidth">18</button></td>
-                        <td class="has-text-right"><button
-                            class="button cell is-white is-small is-fullwidth">19</button></td>
-                        <td class="has-text-right"><button
-                            class="button cell is-white is-small is-fullwidth">20</button></td>
-                        <td class="has-text-right"><button
-                            class="button cell is-white is-small is-fullwidth">21</button></td>
-                        <td class="has-text-right"><button
-                            class="button cell is-white is-small is-fullwidth">22</button></td>
+                        <td><button class="button cell is-white is-small is-fullwidth">16</button></td>
+                        <td><button class="button cell is-white is-small is-fullwidth">17</button></td>
+                        <td><button class="button cell is-white is-small is-fullwidth">18</button></td>
+                        <td><button class="button cell is-white is-small is-fullwidth">19</button></td>
+                        <td><button class="button cell is-white is-small is-fullwidth">20</button></td>
+                        <td><button class="button cell is-white is-small is-fullwidth">21</button></td>
+                        <td><button class="button cell is-white is-small is-fullwidth">22</button></td>
                       </tr>
                       <tr>
-                        <td class="has-text-right"><button
-                            class="button cell is-white is-small is-fullwidth">23</button></td>
-                        <td class="has-text-right"><button
-                            class="button cell is-white is-small is-fullwidth">24</button></td>
-                        <td class="has-text-right"><button
-                            class="button cell is-white is-small is-fullwidth">25</button></td>
-                        <td class="has-text-right"><button
-                            class="button cell is-white is-small is-fullwidth">26</button></td>
-                        <td class="has-text-right"><button
-                            class="button cell is-white is-small is-fullwidth">27</button></td>
-                        <td class="has-text-right"><button
-                            class="button cell is-white is-small is-fullwidth">28</button></td>
-                        <td class="has-text-right"><button
-                            class="button cell is-white is-small is-fullwidth">29</button></td>
+                        <td><button class="button cell is-white is-small is-fullwidth">23</button></td>
+                        <td><button class="button cell is-white is-small is-fullwidth">24</button></td>
+                        <td><button class="button cell is-white is-small is-fullwidth">25</button></td>
+                        <td><button class="button cell is-white is-small is-fullwidth">26</button></td>
+                        <td><button class="button cell is-white is-small is-fullwidth">27</button></td>
+                        <td><button class="button cell is-white is-small is-fullwidth">28</button></td>
+                        <td><button class="button cell is-white is-small is-fullwidth">29</button></td>
                       </tr>
                       <tr>
-                        <td class="has-text-right"><button
-                            class="button cell is-white is-small is-fullwidth">30</button></td>
-                        <td class="has-text-right"><button class="button cell is-light is-small is-fullwidth">1</button>
+                        <td><button class="button cell is-white is-small is-fullwidth">30</button></td>
+                        <td><button class="button cell is-light is-small is-fullwidth">1</button>
                         </td>
-                        <td class="has-text-right"><button class="button cell is-light is-small is-fullwidth">2</button>
+                        <td><button class="button cell is-light is-small is-fullwidth">2</button>
                         </td>
-                        <td class="has-text-right"><button class="button cell is-light is-small is-fullwidth">3</button>
+                        <td><button class="button cell is-light is-small is-fullwidth">3</button>
                         </td>
-                        <td class="has-text-right"><button class="button cell is-light is-small is-fullwidth">4</button>
+                        <td><button class="button cell is-light is-small is-fullwidth">4</button>
                         </td>
-                        <td class="has-text-right"><button class="button cell is-light is-small is-fullwidth">5</button>
+                        <td><button class="button cell is-light is-small is-fullwidth">5</button>
                         </td>
-                        <td class="has-text-right"><button class="button cell is-light is-small is-fullwidth">6</button>
+                        <td><button class="button cell is-light is-small is-fullwidth">6</button>
                         </td>
                       </tr>
                     </tbody>
                   </table>
+                  <div class="block">
+                    <div class="field is-grouped">
+                      <p class="control">
+                        <button class="button is-small">
+                          <span class="icon is-small">❌</span>
+                          <span>Clear</span>
+                        </button>
+                      </p>
+                      <p class="control is-flex is-flex-grow-1">
+                        <button class="button is-small is-flex-grow-1">June 8, 2025</button>
+                      </p>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -170,7 +159,7 @@
     </div>
   </main>
 
-  <!-- <script src="lib.js"></script> -->
+  <!-- <script src="dream-html.js"></script> -->
 </body>
 
 </html>

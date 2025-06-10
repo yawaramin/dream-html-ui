@@ -55,7 +55,7 @@
    * @typedef {object} HObj
    * @prop {string} tag
    * @prop {Record<string, string>} attrs
-   * @prop {Array<string | HObj>} children
+   * @prop {string | Array<string | HObj>} children
    */
 
   /** @type {(obj: string | HObj) => Element | Text} */
@@ -70,8 +70,12 @@
       elem.setAttribute(attr, obj.attrs[attr]);
     }
 
-    for (const child of obj.children) {
-      elem.appendChild(h(child));
+    if (typeof (obj.children) == 'string') {
+      elem.appendChild(document.createTextNode(obj.children));
+    } else {
+      for (const child of obj.children) {
+        elem.appendChild(h(child));
+      }
     }
 
     return elem;
@@ -89,8 +93,8 @@
     }
   })
 
-  customElements.define('combo-box', class extends HTMLElement {
-    /** @type {HTMLAnchorElement | null} */
+  customElements.define('dh-combobox', class extends HTMLElement {
+    /** @type {HTMLButtonElement | null} */
     #selected = null;
 
     #numItems = 0;
@@ -158,7 +162,7 @@
 
     /** @type {NodeListOf<HTMLAnchorElement>} */
     get shownItems() {
-      return this.querySelectorAll('a.dropdown-item:not(.is-hidden)');
+      return this.querySelectorAll('button.dropdown-item:not(.is-hidden)');
     }
 
     /** @type {NodeListOf<HTMLOptionElement>} */
@@ -169,7 +173,7 @@
     /** @type {(value: string, text: string, tabIndex: number) => void} */
     addItem(value, text, tabIndex) {
       this.dropdownContent.appendChild(h({
-        tag: 'a',
+        tag: 'button',
         attrs: {
           class: 'dropdown-item',
           tabindex: tabIndex.toString(),
@@ -191,7 +195,7 @@
             switch (mutation.type) {
               case 'attributes':
                 if (mutation.target.nodeName == 'OPTION' && mutation.attributeName == 'value') {
-                  const item = notNull(this.querySelector(`a.dropdown-item[value="${mutation.oldValue}"]`));
+                  const item = notNull(this.querySelector(`.dropdown-item[value="${mutation.oldValue}"]`));
 
                   item.setAttribute('value', mutation.target.value);
                   item.textContent = mutation.target.textContent || mutation.target.value;
@@ -209,7 +213,7 @@
                 for (const removedNode of mutation.removedNodes) {
                   if (removedNode.nodeName == 'OPTION') {
                     const nodeValue = removedNode.getAttribute('value');
-                    this.querySelector('.dropdown-content').removeChild(this.querySelector(`a.dropdown-item[value="${nodeValue}"]`));
+                    this.querySelector('.dropdown-content').removeChild(this.querySelector(`.dropdown-item[value="${nodeValue}"]`));
                   }
                 }
 
@@ -224,7 +228,7 @@
       const inp = notNull(this.querySelector('input'));
 
       /** @type {NodeListOf<HTMLAnchorElement>} */
-      const items = this.querySelectorAll('a.dropdown-item');
+      const items = this.querySelectorAll('button.dropdown-item');
 
       this.#numItems = items.length;
 
@@ -255,7 +259,7 @@
         }
       });
 
-      inp.addEventListener('keyup', evt => {
+      inp.addEventListener('keyup', () => {
         if (!isActive(this)) {
           activate(this);
         }
@@ -325,21 +329,42 @@
             case ESC:
               deactivate(this);
               break;
-
-            case 'Enter':
-            case ' ':
-              item.click();
-              break;
           }
         });
       }
+    }
+  });
+
+  customElements.define('date-picker', class extends HTMLElement {
+    connectedCallback() {
+      const inp = this.input;
+      const key = inp.name || inp.id || crypto.randomUUID();
+      const menuId = `${key}-menu`;
+
+      inp.ariaHasPopup = 'true';
+      inp.setAttribute('aria-controls', menuId);
+
+      this.render();
+    }
+
+    render() {
+      const inp = this.input;
+
+    }
+
+    get input() {
+      return notNull(this.querySelector('input'));
     }
   });
 })();
 
 /*
 const headerFmt = new Intl.DateTimeFormat(navigator.language, {month: 'long', year: 'numeric'});
+const weekdayFmt = new Intl.DateTimeFormat(navigator.language, {weekday: 'narrow'});
+const monthFmt = new Intl.DateTimeFormat(navigator.language, {month: 'short'});
 const now = new Date();
+weekdayFmt.format(now);
+
 const locale = new Intl.Locale(navigator.language);
 const weekInfo = locale.getWeekInfo();
 */
