@@ -1,3 +1,9 @@
+/** @type {(s: string) => Element | null} */
+function $(s) { return document.querySelector(s); }
+
+/** @type {(s: string) => NodeListOf<Element>} */
+function $$(s) { return document.querySelectorAll(s); }
+
 (() => {
   const IS_ACTIVE = 'is-active';
   const IS_LOADING = 'is-loading';
@@ -81,6 +87,9 @@
     return elem;
   }
 
+  /** @type {RegExp} */
+  const WS = /[\t\n\r ]+/g;
+
   document.addEventListener('click', evt => {
     if (evt.target == null) {
       return;
@@ -163,8 +172,13 @@
     }
 
     /** @type {NodeListOf<HTMLButtonElement>} */
+    get allItems() {
+      return this.querySelectorAll('.dropdown-item[value]');
+    }
+
+    /** @type {NodeListOf<HTMLButtonElement>} */
     get shownItems() {
-      return this.querySelectorAll('button.dropdown-item:not(.is-hidden)');
+      return this.querySelectorAll('.dropdown-item[value]:not(.is-hidden)');
     }
 
     /** @type {NodeListOf<HTMLOptionElement>} */
@@ -182,7 +196,7 @@
           value,
           role: 'menuitem',
         },
-        children: [text],
+        children: text,
       }));
     }
 
@@ -231,9 +245,6 @@
     connectedCallback() {
       const inp = notNull(this.querySelector('input'));
 
-      /** @type {NodeListOf<HTMLAnchorElement>} */
-      const items = this.querySelectorAll('button.dropdown-item');
-
       inp.addEventListener('focus', () => {
         if (!isActive(this)) {
           activate(this);
@@ -268,14 +279,16 @@
 
         deactivate(this.selectedItem);
 
-        for (const item of items) {
-          if (notNull(item.textContent).toLowerCase().includes(inp.value.toLowerCase())) {
+        for (const item of this.allItems) {
+          const content = notNull(item.textContent).trim().replace(WS, ' ');
+
+          if (content.toLowerCase().includes(inp.value.toLowerCase())) {
             show(item);
           } else {
             hide(item);
           }
 
-          if (item.textContent == inp.value) {
+          if (content == inp.value) {
             activate(item);
           }
         }
@@ -296,8 +309,10 @@
         }
       });
 
-      for (const item of items) {
-        item.addEventListener('keydown', evt => {
+      content.addEventListener('keydown', evt => {
+        const item = evt.target;
+
+        if (item != null && item instanceof HTMLElement && item.classList.contains('dropdown-item') && item.getAttribute('value') != null) {
           switch (evt.key) {
             case DOWN_ARROW:
               for (const it of this.shownItems) {
@@ -319,15 +334,14 @@
               }
 
               inp.focus();
-              inp.select();
               break;
 
             case ESC:
               deactivate(this);
               break;
           }
-        });
-      }
+        }
+      });
     }
   });
 
