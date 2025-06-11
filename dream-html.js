@@ -12,10 +12,6 @@ function $$(s) { return document.querySelectorAll(s); }
   const UP_ARROW = 'ArrowUp';
   const DOWN_ARROW = 'ArrowDown';
 
-  if (window.hasOwnProperty('htmx')) {
-    htmx.config.requestClass = IS_LOADING;
-  }
-
   /** @type {<A>(a: A | null) => A} */
   function notNull(value) {
     if (value == null) throw TypeError('Value is null or undefined');
