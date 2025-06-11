@@ -157,6 +157,11 @@ function $$(s) { return document.querySelectorAll(s); }
       }
     }
 
+    /** @type {HTMLInputElement} */
+    get input() {
+      return notNull(this.querySelector('input'));
+    }
+
     /** @type {HTMLDivElement} */
     get dropdownContent() {
       return notNull(this.querySelector('.dropdown-content'));
@@ -239,7 +244,7 @@ function $$(s) { return document.querySelectorAll(s); }
     }
 
     connectedCallback() {
-      const inp = notNull(this.querySelector('input'));
+      const inp = this.input;
 
       inp.addEventListener('focus', () => {
         if (!isActive(this)) {
@@ -268,27 +273,8 @@ function $$(s) { return document.querySelectorAll(s); }
         }
       });
 
-      inp.addEventListener('keyup', () => {
-        if (!isActive(this)) {
-          activate(this);
-        }
-
-        deactivate(this.selectedItem);
-
-        for (const item of this.allItems) {
-          const content = notNull(item.textContent).trim().replace(WS, ' ');
-
-          if (content.toLowerCase().includes(inp.value.toLowerCase())) {
-            show(item);
-          } else {
-            hide(item);
-          }
-
-          if (content == inp.value) {
-            activate(item);
-          }
-        }
-      });
+      inp.addEventListener('keyup', evt => this.#handleChange(evt));
+      inp.addEventListener('search', evt => this.#handleChange(evt));
 
       const content = this.dropdownContent;
 
@@ -338,6 +324,30 @@ function $$(s) { return document.querySelectorAll(s); }
           }
         }
       });
+    }
+
+    #handleChange(evt) {
+      const inp = evt.target;
+
+      if (!isActive(this)) {
+        activate(this);
+      }
+
+      deactivate(this.selectedItem);
+
+      for (const item of this.allItems) {
+        const content = notNull(item.textContent).trim().replace(WS, ' ');
+
+        if (content.toLowerCase().includes(inp.value.toLowerCase())) {
+          show(item);
+        } else {
+          hide(item);
+        }
+
+        if (content == inp.value) {
+          activate(item);
+        }
+      }
     }
   });
 
