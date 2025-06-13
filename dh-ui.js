@@ -68,6 +68,15 @@ function $$(s) { return document.querySelectorAll(s); }
     el?.classList.remove('is-light');
   }
 
+  /** @type {(el: Element | null) => void} */
+  function primary(el) {
+    el?.classList.add('is-primary');
+  }
+
+  /** @type {(el: Element | null) => void} */
+  function noprimary(el) {
+    el?.classList.remove('is-primary');
+  }
 
   /** @type {(el: Element | null) => boolean} */
   function isActive(el) {
@@ -531,7 +540,14 @@ function $$(s) { return document.querySelectorAll(s); }
       }
 
       for (let day = 1; day <= monthLast.getDate(); day++) {
+        const idx = dow1offset + day - 1;
         tdButtons[dow1offset + day - 1].textContent = day.toString();
+
+        if (day == dt.getDate()) {
+          primary(tdButtons[idx]);
+        } else {
+          noprimary(tdButtons[idx]);
+        }
       }
     }
   });
