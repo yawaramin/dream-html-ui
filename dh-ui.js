@@ -48,6 +48,27 @@ function $$(s) { return document.querySelectorAll(s); }
     el?.classList.remove(IS_ACTIVE);
   }
 
+  /** @type {(el: Element | null) => void} */
+  function light(el) {
+    el?.classList.add('is-light');
+  }
+
+  /** @type {(el: Element | null) => void} */
+  function nolight(el) {
+    el?.classList.remove('is-light');
+  }
+
+  /** @type {(el: Element | null) => void} */
+  function white(el) {
+    el?.classList.add('is-light');
+  }
+
+  /** @type {(el: Element | null) => void} */
+  function nowhite(el) {
+    el?.classList.remove('is-light');
+  }
+
+
   /** @type {(el: Element | null) => boolean} */
   function isActive(el) {
     return el != null && el.classList.contains(IS_ACTIVE);
@@ -441,14 +462,20 @@ function $$(s) { return document.querySelectorAll(s); }
         }
       });
 
-      /*
-      inp.addEventListener('keyup', evt => {
-        switch (evt.key) {
-          case 'ArrowLeft':
+      this.#btnPrevMonth.addEventListener('click', () => {
+        const prevMonth = new Date(this.#date);
+        prevMonth.setDate(0);
 
-        }
+        this.#render(prevMonth);
       });
-      */
+
+      this.#btnNextMonth.addEventListener('click', () => {
+        const nextMonth = new Date(this.#date);
+        nextMonth.setMonth(nextMonth.getMonth() + 1);
+        nextMonth.setDate(1);
+
+        this.#render(nextMonth);
+      });
 
       this.#btnToday.addEventListener('click', () => {
         inp.value = notNull(this.#btnToday.getAttribute('title'));
@@ -472,11 +499,12 @@ function $$(s) { return document.querySelectorAll(s); }
 
     #render(dt) {
       const prevMonth = new Date(dt);
-      prevMonth.setMonth(prevMonth.getMonth() - 1);
+      prevMonth.setDate(0); // Last day of the previous month
       this.#btnPrevMonth.setAttribute('title', headerFmt.format(prevMonth));
 
       const nextMonth = new Date(dt);
       nextMonth.setMonth(nextMonth.getMonth() + 1);
+      nextMonth.setDate(1); // First day of the next month
       this.#btnNextMonth.setAttribute('title', headerFmt.format(nextMonth));
 
       this.#btnMonth.textContent = monthFmt.format(dt);
@@ -485,17 +513,26 @@ function $$(s) { return document.querySelectorAll(s); }
       this.#btnToday.textContent = dateFmt.format(today);
       this.#btnToday.setAttribute('title', yyyyMMdd(today));
 
-      const tdButtons = this.querySelectorAll('tbody > td > button');
       const month1st = new Date(dt);
       month1st.setDate(1);
+
+      const monthLast = new Date(dt);
+      monthLast.setMonth(monthLast.getMonth() + 1);
+      monthLast.setDate(0);
+
+      const dow1 = month1st.getDay();
+      const dow1offset = dow1 == 0 ? 6 : dow1 - 1;
+      const tdButtons = this.querySelectorAll('tbody > tr > td > button');
+
+      for (let idx = 0; idx < dow1offset; idx++) {
+        nowhite(tdButtons[idx]);
+        light(tdButtons[idx]);
+        tdButtons[idx].textContent = (prevMonth.getDate() - dow1offset + idx + 1).toString();
+      }
+
+      for (let day = 1; day <= monthLast.getDate(); day++) {
+        tdButtons[dow1offset + day - 1].textContent = day.toString();
+      }
     }
   });
 })();
-
-/*
-const now = new Date();
-weekdayFmt.format(now);
-
-const locale = new Intl.Locale(navigator.language);
-const weekInfo = locale.getWeekInfo();
-*/
