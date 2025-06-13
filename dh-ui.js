@@ -53,30 +53,38 @@ function $$(s) { return document.querySelectorAll(s); }
     return el != null && el.classList.contains(IS_ACTIVE);
   }
 
-  /**
-   * @typedef {object} HObj
-   * @prop {string} tag
-   * @prop {Record<string, string>} attrs
-   * @prop {string | Array<string | HObj>} children
-   */
-
-  /** @type {(obj: string | HObj) => Element | Text} */
-  function h(obj) {
-    if (typeof (obj) == 'string') {
-      return document.createTextNode(obj);
+  /** @type {(tag: string, attrs: Record<string, string> | null, children: Array<Element | string> | Element | string | null) => Element} */
+  function h(tag, attrs, children) {
+    if (attrs == null) {
+      attrs = {};
     }
 
-    const elem = document.createElement(obj.tag);
+    const tagClasses = tag.split('.');
+    tag = tagClasses[0];
 
-    for (const attr in obj.attrs) {
-      elem.setAttribute(attr, obj.attrs[attr]);
+    if (tagClasses.length > 1) {
+      attrs.class = tagClasses.slice(1).join(' ');
     }
 
-    if (typeof (obj.children) == 'string') {
-      elem.appendChild(document.createTextNode(obj.children));
-    } else {
-      for (const child of obj.children) {
-        elem.appendChild(h(child));
+    if (children == null) {
+      children = [];
+    }
+
+    if (children instanceof Element || typeof children == 'string') {
+      children = [children];
+    }
+
+    const elem = document.createElement(tag);
+
+    for (const attr in attrs) {
+      elem.setAttribute(attr, attrs[attr]);
+    }
+
+    for (const child of children) {
+      if (typeof (child) == 'string') {
+        elem.appendChild(document.createTextNode(child));
+      } else {
+        elem.appendChild(child);
       }
     }
 
@@ -189,16 +197,15 @@ function $$(s) { return document.querySelectorAll(s); }
 
     /** @type {(value: string, text: string, tabIndex: number) => void} */
     addItem(value, text, tabIndex) {
-      this.dropdownContent.appendChild(h({
-        tag: 'button',
-        attrs: {
-          class: 'dropdown-item',
+      this.dropdownContent.appendChild(h(
+        'button.dropdown-item',
+        {
           tabindex: tabIndex.toString(),
           value,
           role: 'menuitem',
         },
-        children: text,
-      }));
+        text,
+      ));
     }
 
     constructor() {
@@ -351,33 +358,142 @@ function $$(s) { return document.querySelectorAll(s); }
     }
   });
 
-  customElements.define('date-picker', class extends HTMLElement {
+  /** @type {<A>(len: number, f: (n: number) => A) => A[]} */
+  function genArray(len, f) {
+    const arr = [];
+
+    for (let i = 0; i < len; i++) {
+      arr.push(f(i));
+    }
+
+    return arr;
+  }
+
+  function yyyyMMdd(dt) {
+    const yyyy = dt.getFullYear();
+    const MM = (dt.getMonth() + 1).toString().padStart(2, '0');
+    const dd = (dt.getDate()).toString().padStart(2, '0');
+
+    return `${yyyy}-${MM}-${dd}`;
+  }
+
+  const headerFmt = new Intl.DateTimeFormat(navigator.language, { month: 'long', year: 'numeric' });
+  const monthFmt = new Intl.DateTimeFormat(navigator.language, { month: 'long', year: 'numeric' });
+  const weekdayFmt = new Intl.DateTimeFormat(navigator.language, { weekday: 'narrow' });
+  const dateFmt = new Intl.DateTimeFormat(navigator.language, { dateStyle: 'long' });
+
+  const monToFri = [
+    new Date('2025-06-09T00:00'),
+    new Date('2025-06-10T00:00'),
+    new Date('2025-06-11T00:00'),
+    new Date('2025-06-12T00:00'),
+    new Date('2025-06-13T00:00'),
+    new Date('2025-06-14T00:00'),
+    new Date('2025-06-15T00:00'),
+  ];
+
+  customElements.define('dh-datepicker', class extends HTMLElement {
+    #btnPrevMonth = h('button.button', {}, [
+      h('span.icon is-small', {}, '◀️'),
+    ]);
+
+    #btnMonth = h('button.button.is-flex-grow-1', {}, '');
+    #btnNextMonth = h('button.button', {}, [h('span.icon.is-small', {}, '️▶️')]);
+    #btnClear = h('button.button.is-small', {}, [h('span.icon.is-small', {}, '❌')]);
+    #btnToday = h('button.button.is-small.is-flex-grow-1', {}, '');
+
     connectedCallback() {
-      const inp = this.input;
-      const key = inp.name || inp.id || crypto.randomUUID();
-      const menuId = `${key}-menu`;
+      const inp = this.#input;
+      const key = inp.id || crypto.randomUUID();
+      const menuId = `calendar-menu-${key}`;
 
       inp.ariaHasPopup = 'true';
+      inp.type = 'search';
       inp.setAttribute('aria-controls', menuId);
 
-      this.render();
+      this.appendChild(h('div.dropdown-menu', { id: menuId, role: 'menu' },
+        h('div.dropdown-content', {},
+          h('div.dropdown-item', {}, [
+            h('div.block', {},
+              h('div.field is-grouped', {}, [
+                h('p.control', {}, [this.#btnPrevMonth]),
+                h('p.control.is-flex.is-flex-grow-1', {}, this.#btnMonth),
+                h('p.control', {}, this.#btnNextMonth),
+              ])),
+            h('table.block.is-narrow.table', {}, [
+              h('thead', {}, monToFri.map(d => h('th.has-text-right.pr-3', {}, weekdayFmt.format(d)))),
+              h('tbody', {}, genArray(6, () =>
+                h('tr', {}, genArray(7, () =>
+                  h('td', {}, h('button.button.is-small.is-fullwidth.is-white', {}, '')))))),
+            ]),
+            h('div.block', {},
+              h('div.field.is-grouped', {}, [
+                h('p.control', {}, [this.#btnClear]),
+                h('p.control.is-flex.is-flex-grow-1', {}, this.#btnToday)
+              ])
+            ),
+          ]))));
+
+      this.#render(this.#date);
+
+      inp.addEventListener('focus', () => {
+        if (!isActive(this)) {
+          activate(this);
+        }
+      });
+
+      /*
+      inp.addEventListener('keyup', evt => {
+        switch (evt.key) {
+          case 'ArrowLeft':
+
+        }
+      });
+      */
+
+      this.#btnToday.addEventListener('click', () => {
+        inp.value = notNull(this.#btnToday.getAttribute('title'));
+        deactivate(this);
+      });
     }
 
-    render() {
-      const inp = this.input;
-
-    }
-
-    get input() {
+    get #input() {
       return notNull(this.querySelector('input'));
+    }
+
+    get #date() {
+      const d = new Date(`${this.#input.value}T00:00`);
+
+      if (isNaN(d.valueOf())) {
+        return new Date();
+      }
+
+      return d;
+    }
+
+    #render(dt) {
+      const prevMonth = new Date(dt);
+      prevMonth.setMonth(prevMonth.getMonth() - 1);
+      this.#btnPrevMonth.setAttribute('title', headerFmt.format(prevMonth));
+
+      const nextMonth = new Date(dt);
+      nextMonth.setMonth(nextMonth.getMonth() + 1);
+      this.#btnNextMonth.setAttribute('title', headerFmt.format(nextMonth));
+
+      this.#btnMonth.textContent = monthFmt.format(dt);
+
+      const today = new Date();
+      this.#btnToday.textContent = dateFmt.format(today);
+      this.#btnToday.setAttribute('title', yyyyMMdd(today));
+
+      const tdButtons = this.querySelectorAll('tbody > td > button');
+      const month1st = new Date(dt);
+      month1st.setDate(1);
     }
   });
 })();
 
 /*
-const headerFmt = new Intl.DateTimeFormat(navigator.language, {month: 'long', year: 'numeric'});
-const weekdayFmt = new Intl.DateTimeFormat(navigator.language, {weekday: 'narrow'});
-const monthFmt = new Intl.DateTimeFormat(navigator.language, {month: 'short'});
 const now = new Date();
 weekdayFmt.format(now);
 

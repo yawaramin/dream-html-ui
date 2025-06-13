@@ -4,10 +4,10 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Datepicker</title>
+  <title>dream-html UI - Datepicker</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.4/css/bulma.min.css">
   <style>
-    date-picker .table {
+    dh-datepicker .table {
       --bulma-table-cell-border-width: 0;
       --bulma-table-cell-padding: 0;
       --bulma-table-cell-border-color: var(--bulma-table-background-color);
@@ -17,8 +17,8 @@
       }
     }
 
-    date-picker .table.is-narrow td,
-    date-picker .table.is-narrow th {
+    dh-datepicker .table.is-narrow td,
+    dh-datepicker .table.is-narrow th {
       padding: 0;
     }
   </style>
@@ -33,12 +33,13 @@
       </div>
       <div class="field-body">
         <div class="field">
-          <date-picker class="dropdown is-active">
+          <dh-datepicker class="dropdown">
             <div class="control dropdown-trigger has-icons-left">
-              <input class=input aria-haspopup=true aria-controls="start-date-dropdown-menu" name="start-date"
-                id="start-date" value="2025-06-07">
+              <input class=input type=search aria-haspopup=true aria-controls="start-date-dropdown-menu"
+                name="start-date" id="start-date" value="2025-06-07">
               <span class="icon is-small is-left">🗓️</span>
             </div>
+            <!--
             <div class="dropdown-menu" id="start-date-dropdown-menu" role="menu">
               <div class="dropdown-content">
                 <div class="dropdown-item" role="menuitem">
@@ -153,13 +154,14 @@
                 </div>
               </div>
             </div>
-          </date-picker>
+          -->
+          </dh-datepicker>
         </div>
       </div>
     </div>
   </main>
 
-  <!-- <script src="dream-html.js"></script> -->
+  <script src="dh-ui.js"></script>
 </body>
 
 </html>
