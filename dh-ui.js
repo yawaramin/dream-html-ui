@@ -100,7 +100,7 @@ function $$(s) { return document.querySelectorAll(s); }
     }
 
     for (const dropdown of document.querySelectorAll('.dropdown')) {
-      if (!dropdown.contains(evt.target)) {
+      if (evt.target instanceof Node && dropdown.contains(evt.target)) { } else {
         deactivate(dropdown);
       }
     }
@@ -218,7 +218,7 @@ function $$(s) { return document.querySelectorAll(s); }
           for (const mutation of mutations) {
             switch (mutation.type) {
               case 'attributes':
-                if (mutation.target.nodeName == 'OPTION' && mutation.attributeName == 'value') {
+                if (mutation.target instanceof HTMLOptionElement && mutation.attributeName == 'value') {
                   const item = notNull(this.querySelector(`.dropdown-item[value="${mutation.oldValue}"]`));
 
                   item.setAttribute('value', mutation.target.value);
@@ -231,15 +231,16 @@ function $$(s) { return document.querySelectorAll(s); }
                 let numItems = 0;
 
                 for (const addedNode of mutation.addedNodes) {
-                  if (addedNode.nodeName == 'OPTION') {
+                  if (addedNode instanceof HTMLOptionElement) {
                     this.addItem(addedNode.value, addedNode.textContent || addedNode.value, numItems++);
                   }
                 }
 
                 for (const removedNode of mutation.removedNodes) {
-                  if (removedNode.nodeName == 'OPTION') {
+                  if (removedNode instanceof HTMLOptionElement) {
                     const nodeValue = removedNode.getAttribute('value');
-                    this.querySelector('.dropdown-content').removeChild(this.querySelector(`.dropdown-item[value="${nodeValue}"]`));
+
+                    this.querySelector('.dropdown-content')?.removeChild(notNull(this.querySelector(`.dropdown-item[value="${nodeValue}"]`)));
                   }
                 }
 
@@ -286,8 +287,8 @@ function $$(s) { return document.querySelectorAll(s); }
       const content = this.dropdownContent;
 
       content.addEventListener('click', evt => {
-        if (evt.target?.nodeName == 'BUTTON') {
-          const item = notNull(evt.target);
+        if (evt.target instanceof HTMLButtonElement) {
+          const item = evt.target;
 
           evt.preventDefault();
           inp.value = notNull(item.getAttribute('value'));
@@ -399,7 +400,6 @@ function $$(s) { return document.querySelectorAll(s); }
 
     #btnMonth = h('button.button.is-flex-grow-1', {}, '');
     #btnNextMonth = h('button.button', {}, [h('span.icon.is-small', {}, '️▶️')]);
-    #btnClear = h('button.button.is-small', {}, [h('span.icon.is-small', {}, '❌')]);
     #btnToday = h('button.button.is-small.is-flex-grow-1', {}, '');
 
     connectedCallback() {
@@ -428,7 +428,6 @@ function $$(s) { return document.querySelectorAll(s); }
             ]),
             h('div.block', {},
               h('div.field.is-grouped', {}, [
-                h('p.control', {}, [this.#btnClear]),
                 h('p.control.is-flex.is-flex-grow-1', {}, this.#btnToday)
               ])
             ),
