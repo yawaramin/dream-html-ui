@@ -619,7 +619,7 @@ function $$(s) { return document.querySelectorAll(s); }
       this.#btnToday.setAttribute('value', yyyyMMdd(today));
 
       const month1st = setDate(dt, () => 1);
-      const monthLast = setDate(setMonth(dt, m => m + 1), () => 0);
+      const monthLast = setDate(setMonth(month1st, m => m + 1), () => 0);
       const dow1 = month1st.getDay();
       const dow1offset = dow1 == 0 ? 6 : dow1 - 1;
       const tdButtons = this.querySelectorAll('tbody > tr > td > button');
