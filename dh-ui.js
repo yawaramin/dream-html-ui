@@ -60,12 +60,12 @@ function $$(s) { return document.querySelectorAll(s); }
 
   /** @type {(el: Element | null) => void} */
   function white(el) {
-    el?.classList.add('is-light');
+    el?.classList.add('is-white');
   }
 
   /** @type {(el: Element | null) => void} */
   function nowhite(el) {
-    el?.classList.remove('is-light');
+    el?.classList.remove('is-white');
   }
 
   /** @type {(el: Element | null) => void} */
@@ -78,9 +78,32 @@ function $$(s) { return document.querySelectorAll(s); }
     el?.classList.remove('is-primary');
   }
 
-  /** @type {(el: Element | null) => boolean} */
+  /** @type {(el: Element | null) => void} */
+  function danger(el) {
+    el?.classList.add('is-danger');
+  }
+
+  /** @type {(el: Element | null) => void} */
+  function nodanger(el) {
+    el?.classList.remove('is-danger');
+  }
+
+  /** @type {(el: Element | null) => void} */
+  function success(el) {
+    el?.classList.add('is-success');
+  }
+
+  /** @type {(el: Element | null) => void} */
+  function nosuccess(el) {
+    el?.classList.remove('is-success');
+  }
+
   function isActive(el) {
     return el != null && el.classList.contains(IS_ACTIVE);
+  }
+
+  function isDanger(el) {
+    return el != null && el.classList.contains('is-danger');
   }
 
   /** @type {(tag: string, attrs: Record<string, string> | null, children: Array<Element | string> | Element | string | null) => Element} */
@@ -134,7 +157,32 @@ function $$(s) { return document.querySelectorAll(s); }
         deactivate(dropdown);
       }
     }
-  })
+  });
+
+  document.body.addEventListener('focusin', evt => {
+    const elem = evt.target;
+
+    if ((elem instanceof HTMLInputElement || elem instanceof HTMLTextAreaElement || elem instanceof HTMLSelectElement) && isDanger(elem)) {
+      elem.reportValidity();
+    }
+  });
+
+  document.body.addEventListener('focusout', evt => {
+    const elem = evt.target;
+
+    if (elem instanceof HTMLInputElement || elem instanceof HTMLTextAreaElement || elem instanceof HTMLSelectElement) {
+      if (elem.value == '') {
+        nodanger(elem);
+        nosuccess(elem);
+      } else if (elem.checkValidity()) {
+        nodanger(elem);
+        success(elem);
+      } else {
+        nosuccess(elem);
+        danger(elem);
+      }
+    }
+  });
 
   customElements.define('dh-combobox', class extends HTMLElement {
     /** @type {MutationObserver | null} */
@@ -400,6 +448,7 @@ function $$(s) { return document.querySelectorAll(s); }
     return arr;
   }
 
+  /** @type {(dt: Date) => string} */
   function yyyyMMdd(dt) {
     const yyyy = dt.getFullYear();
     const MM = (dt.getMonth() + 1).toString().padStart(2, '0');
@@ -408,10 +457,32 @@ function $$(s) { return document.querySelectorAll(s); }
     return `${yyyy}-${MM}-${dd}`;
   }
 
+  /** @type {(iso: string) => Date} */
+  function dateFromISO(iso) {
+    return new Date(`${iso}T00:00`);
+  }
+
+  /** @type {(dt: Date, f: (date: number) => number) => Date} */
+  function setDate(dt, f) {
+    const newDate = new Date(dt);
+    newDate.setDate(f(newDate.getDate()));
+
+    return newDate;
+  }
+
+  /** @type {(dt: Date, f: (month: number) => number) => Date} */
+  function setMonth(dt, f) {
+    const newDate = new Date(dt);
+    newDate.setMonth(f(newDate.getMonth()));
+
+    return newDate;
+  }
+
   const headerFmt = new Intl.DateTimeFormat(navigator.language, { month: 'long', year: 'numeric' });
   const monthFmt = new Intl.DateTimeFormat(navigator.language, { month: 'long', year: 'numeric' });
   const weekdayFmt = new Intl.DateTimeFormat(navigator.language, { weekday: 'narrow' });
   const dateFmt = new Intl.DateTimeFormat(navigator.language, { dateStyle: 'long' });
+  const dayFmt = new Intl.DateTimeFormat(navigator.language, { day: 'numeric' });
 
   const monToFri = [
     new Date('2025-06-09T00:00'),
@@ -424,12 +495,14 @@ function $$(s) { return document.querySelectorAll(s); }
   ];
 
   customElements.define('dh-datepicker', class extends HTMLElement {
+    #input = notNull(this.querySelector('input'));
+
     #btnPrevMonth = h('button.button', {}, [
-      h('span.icon is-small', {}, '◀️'),
+      h('span.icon is-small', {}, '◀'),
     ]);
 
     #btnMonth = h('button.button.is-flex-grow-1', {}, '');
-    #btnNextMonth = h('button.button', {}, [h('span.icon.is-small', {}, '️▶️')]);
+    #btnNextMonth = h('button.button', {}, [h('span.icon.is-small', {}, '▶')]);
     #btnToday = h('button.button.is-small.is-flex-grow-1', {}, '');
 
     connectedCallback() {
@@ -440,6 +513,7 @@ function $$(s) { return document.querySelectorAll(s); }
       inp.ariaHasPopup = 'true';
       inp.type = 'search';
       inp.setAttribute('aria-controls', menuId);
+      inp.pattern = '[0-9]{4}-[0-9]{2}-[0-9]{2}';
 
       this.appendChild(h('div.dropdown-menu', { id: menuId, role: 'menu' },
         h('div.dropdown-content', {},
@@ -463,41 +537,60 @@ function $$(s) { return document.querySelectorAll(s); }
             ),
           ]))));
 
-      this.#render(this.#date);
-
       inp.addEventListener('focus', () => {
+        this.#render(this.#date);
+
         if (!isActive(this)) {
           activate(this);
         }
       });
 
       this.#btnPrevMonth.addEventListener('click', () => {
-        const prevMonth = new Date(this.#date);
-        prevMonth.setDate(0);
-
-        this.#render(prevMonth);
+        this.#render(dateFromISO(notNull(this.#btnPrevMonth.getAttribute('value'))));
       });
 
       this.#btnNextMonth.addEventListener('click', () => {
-        const nextMonth = new Date(this.#date);
-        nextMonth.setMonth(nextMonth.getMonth() + 1);
-        nextMonth.setDate(1);
-
-        this.#render(nextMonth);
+        this.#render(dateFromISO(notNull(this.#btnNextMonth.getAttribute('value'))));
       });
 
       this.#btnToday.addEventListener('click', () => {
-        inp.value = notNull(this.#btnToday.getAttribute('title'));
+        inp.value = notNull(this.#btnToday.getAttribute('value'));
         deactivate(this);
+        this.#valid = true;
       });
+
+      const tbody = notNull(this.querySelector('tbody'));
+
+      tbody.addEventListener('keydown', evt => {
+      });
+
+      tbody.addEventListener('click', evt => {
+        const elem = evt.target;
+
+        if (elem instanceof HTMLButtonElement) {
+          inp.value = notNull(elem.getAttribute('value'));
+          deactivate(this);
+          this.#valid = true;
+        }
+      });
+
+      this.#render(this.#date);
     }
 
-    get #input() {
-      return notNull(this.querySelector('input'));
+    set #valid(value) {
+      const inp = this.#input;
+
+      if (value) {
+        nodanger(inp);
+        success(inp);
+      } else {
+        nosuccess(inp);
+        danger(inp);
+      }
     }
 
     get #date() {
-      const d = new Date(`${this.#input.value}T00:00`);
+      const d = dateFromISO(this.#input.value);
 
       if (isNaN(d.valueOf())) {
         return new Date();
@@ -507,47 +600,68 @@ function $$(s) { return document.querySelectorAll(s); }
     }
 
     #render(dt) {
-      const prevMonth = new Date(dt);
-      prevMonth.setDate(0); // Last day of the previous month
-      this.#btnPrevMonth.setAttribute('title', headerFmt.format(prevMonth));
+      const currDate = this.#date;
 
-      const nextMonth = new Date(dt);
-      nextMonth.setMonth(nextMonth.getMonth() + 1);
-      nextMonth.setDate(1); // First day of the next month
+      // Last day of the previous month
+      const prevMonth = setDate(dt, () => 0);
+      this.#btnPrevMonth.setAttribute('title', headerFmt.format(prevMonth));
+      this.#btnPrevMonth.setAttribute('value', yyyyMMdd(prevMonth));
+
+      // First day of the next month
+      const nextMonth = setDate(setMonth(dt, m => m + 1), () => 1);
       this.#btnNextMonth.setAttribute('title', headerFmt.format(nextMonth));
+      this.#btnNextMonth.setAttribute('value', yyyyMMdd(nextMonth));
 
       this.#btnMonth.textContent = monthFmt.format(dt);
 
       const today = new Date();
       this.#btnToday.textContent = dateFmt.format(today);
-      this.#btnToday.setAttribute('title', yyyyMMdd(today));
+      this.#btnToday.setAttribute('value', yyyyMMdd(today));
 
-      const month1st = new Date(dt);
-      month1st.setDate(1);
-
-      const monthLast = new Date(dt);
-      monthLast.setMonth(monthLast.getMonth() + 1);
-      monthLast.setDate(0);
-
+      const month1st = setDate(dt, () => 1);
+      const monthLast = setDate(setMonth(dt, m => m + 1), () => 0);
       const dow1 = month1st.getDay();
       const dow1offset = dow1 == 0 ? 6 : dow1 - 1;
       const tdButtons = this.querySelectorAll('tbody > tr > td > button');
 
       for (let idx = 0; idx < dow1offset; idx++) {
-        nowhite(tdButtons[idx]);
-        light(tdButtons[idx]);
-        tdButtons[idx].textContent = (prevMonth.getDate() - dow1offset + idx + 1).toString();
+        const btn = tdButtons[idx];
+        const btnDate = setDate(prevMonth, d => d - dow1offset + idx + 1);
+
+        noprimary(btn);
+        nowhite(btn);
+        light(btn);
+        btn.textContent = dayFmt.format(btnDate);
+        btn.setAttribute('value', yyyyMMdd(btnDate));
       }
 
       for (let day = 1; day <= monthLast.getDate(); day++) {
-        const idx = dow1offset + day - 1;
-        tdButtons[dow1offset + day - 1].textContent = day.toString();
+        const btn = tdButtons[dow1offset + day - 1];
+        const dayDate = setDate(month1st, () => day);
 
-        if (day == dt.getDate()) {
-          primary(tdButtons[idx]);
+        btn.textContent = dayFmt.format(dayDate);
+        btn.setAttribute('value', yyyyMMdd(dayDate));
+        nolight(btn);
+        white(btn);
+
+        if (dayDate.toDateString() == currDate.toDateString()) {
+          primary(btn);
         } else {
-          noprimary(tdButtons[idx]);
+          noprimary(btn);
         }
+      }
+
+      let day = 1;
+      for (let idx = dow1offset + monthLast.getDate(); idx < tdButtons.length; idx++) {
+        const btn = tdButtons[idx];
+        const btnDate = setDate(monthLast, d => d + day);
+
+        btn.textContent = dayFmt.format(btnDate);
+        btn.setAttribute('value', yyyyMMdd(btnDate));
+        noprimary(btn);
+        nowhite(btn);
+        light(btn);
+        day++;
       }
     }
   });
