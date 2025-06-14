@@ -484,7 +484,7 @@ function $$(s) { return document.querySelectorAll(s); }
   const dateFmt = new Intl.DateTimeFormat(navigator.language, { dateStyle: 'long' });
   const dayFmt = new Intl.DateTimeFormat(navigator.language, { day: 'numeric' });
 
-  const monToFri = [
+  const weekdays = [
     new Date('2025-06-09T00:00'),
     new Date('2025-06-10T00:00'),
     new Date('2025-06-11T00:00'),
@@ -510,10 +510,11 @@ function $$(s) { return document.querySelectorAll(s); }
       const key = inp.id || crypto.randomUUID();
       const menuId = `calendar-menu-${key}`;
 
-      inp.ariaHasPopup = 'true';
-      inp.type = 'search';
+      const tbody = h('tbody', {}, genArray(6, () =>
+        h('tr', {}, genArray(7, () =>
+          h('td', {}, h('button.button.is-small.is-fullwidth.is-white', {}, ''))))));
+
       inp.setAttribute('aria-controls', menuId);
-      inp.pattern = '[0-9]{4}-[0-9]{2}-[0-9]{2}';
 
       this.appendChild(h('div.dropdown-menu', { id: menuId, role: 'menu' },
         h('div.dropdown-content', {},
@@ -525,10 +526,8 @@ function $$(s) { return document.querySelectorAll(s); }
                 h('p.control', {}, this.#btnNextMonth),
               ])),
             h('table.block.is-narrow.table', {}, [
-              h('thead', {}, monToFri.map(d => h('th.has-text-right.pr-3', {}, weekdayFmt.format(d)))),
-              h('tbody', {}, genArray(6, () =>
-                h('tr', {}, genArray(7, () =>
-                  h('td', {}, h('button.button.is-small.is-fullwidth.is-white', {}, '')))))),
+              h('thead', {}, weekdays.map(d => h('th.has-text-right.pr-3', {}, weekdayFmt.format(d)))),
+              tbody,
             ]),
             h('div.block', {},
               h('div.field.is-grouped', {}, [
@@ -559,10 +558,10 @@ function $$(s) { return document.querySelectorAll(s); }
         this.#valid = true;
       });
 
-      const tbody = notNull(this.querySelector('tbody'));
-
+      /*
       tbody.addEventListener('keydown', evt => {
       });
+      */
 
       tbody.addEventListener('click', evt => {
         const elem = evt.target;
