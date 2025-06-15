@@ -11,6 +11,8 @@ function $$(s) { return document.querySelectorAll(s); }
   const ESC = 'Escape';
   const UP_ARROW = 'ArrowUp';
   const DOWN_ARROW = 'ArrowDown';
+  const LEFT_ARROW = 'ArrowLeft';
+  const RIGHT_ARROW = 'ArrowRight';
 
   /** @type {<A>(a: A | null) => A} */
   function notNull(value) {
@@ -494,6 +496,8 @@ function $$(s) { return document.querySelectorAll(s); }
     new Date('2025-06-15T00:00'),
   ];
 
+  const DATE_BUTTONS_SEL = 'tbody > tr > td > button';
+
   customElements.define('dh-datepicker', class extends HTMLElement {
     #input = notNull(this.querySelector('input'));
 
@@ -510,6 +514,12 @@ function $$(s) { return document.querySelectorAll(s); }
       const key = inp.id || crypto.randomUUID();
       const menuId = `calendar-menu-${key}`;
 
+      const headerRow = h('div.field is-grouped', {}, [
+        h('p.control', {}, [this.#btnPrevMonth]),
+        h('p.control.is-flex.is-flex-grow-1', {}, this.#btnMonth),
+        h('p.control', {}, this.#btnNextMonth),
+      ]);
+
       const tbody = h('tbody', {}, genArray(6, () =>
         h('tr', {}, genArray(7, () =>
           h('td', {}, h('button.button.is-small.is-fullwidth.is-white', {}, ''))))));
@@ -519,12 +529,7 @@ function $$(s) { return document.querySelectorAll(s); }
       this.appendChild(h('div.dropdown-menu', { id: menuId, role: 'menu' },
         h('div.dropdown-content', {},
           h('div.dropdown-item', {}, [
-            h('div.block', {},
-              h('div.field is-grouped', {}, [
-                h('p.control', {}, [this.#btnPrevMonth]),
-                h('p.control.is-flex.is-flex-grow-1', {}, this.#btnMonth),
-                h('p.control', {}, this.#btnNextMonth),
-              ])),
+            h('div.block', {}, headerRow),
             h('table.block.is-narrow.table', {}, [
               h('thead', {}, weekdays.map(d => h('th.has-text-right.pr-3', {}, weekdayFmt.format(d)))),
               tbody,
@@ -544,8 +549,44 @@ function $$(s) { return document.querySelectorAll(s); }
         }
       });
 
+      inp.addEventListener('keydown', evt => {
+        switch (evt.key) {
+          case ESC:
+            deactivate(this);
+            break;
+
+          case DOWN_ARROW:
+            this.#btnMonth.focus();
+            break;
+        }
+      });
+
       this.#btnPrevMonth.addEventListener('click', () => {
         this.#render(dateFromISO(notNull(this.#btnPrevMonth.getAttribute('value'))));
+      });
+
+      headerRow.addEventListener('keydown', evt => {
+        const elem = evt.target;
+
+        if (elem instanceof HTMLButtonElement) {
+          switch (evt.key) {
+            case LEFT_ARROW:
+              elem.parentNode?.previousSibling?.firstChild?.focus();
+              break;
+
+            case RIGHT_ARROW:
+              elem.parentNode?.nextSibling?.firstChild?.focus();
+              break;
+
+            case UP_ARROW:
+              inp.focus();
+              break;
+
+            case DOWN_ARROW:
+              this.querySelector(DATE_BUTTONS_SEL)?.focus();
+              break;
+          }
+        }
       });
 
       this.#btnNextMonth.addEventListener('click', () => {
@@ -558,10 +599,43 @@ function $$(s) { return document.querySelectorAll(s); }
         this.#valid = true;
       });
 
-      /*
       tbody.addEventListener('keydown', evt => {
+        const elem = evt.target;
+
+        if (elem instanceof HTMLButtonElement) {
+          switch (evt.key) {
+            case LEFT_ARROW:
+              elem.parentNode?.previousSibling?.firstChild?.focus();
+              break;
+
+            case RIGHT_ARROW:
+              elem.parentNode?.nextSibling?.firstChild?.focus();
+              break;
+
+            case UP_ARROW:
+              const prevRow = elem.parentNode?.parentNode?.previousSibling;
+
+              if (prevRow == null) {
+                this.#btnMonth.focus();
+              } else {
+                prevRow.childNodes[Array.from(elem.parentNode.parentNode.childNodes).indexOf(elem.parentNode)]?.firstChild?.focus();
+              }
+
+              break;
+
+            case DOWN_ARROW:
+              const nextRow = elem.parentNode?.parentNode?.nextSibling;
+
+              if (nextRow == null) {
+                this.#btnToday.focus();
+              } else {
+                nextRow.childNodes[Array.from(elem.parentNode.parentNode.childNodes).indexOf(elem.parentNode)]?.firstChild?.focus();
+              }
+
+              break;
+          }
+        }
       });
-      */
 
       tbody.addEventListener('click', evt => {
         const elem = evt.target;
@@ -570,6 +644,12 @@ function $$(s) { return document.querySelectorAll(s); }
           inp.value = notNull(elem.getAttribute('value'));
           deactivate(this);
           this.#valid = true;
+        }
+      });
+
+      this.#btnToday.addEventListener('keydown', evt => {
+        if (evt.key == UP_ARROW) {
+          this.querySelector('tbody > tr:last-child > td > button')?.focus();
         }
       });
 
@@ -621,7 +701,7 @@ function $$(s) { return document.querySelectorAll(s); }
       const monthLast = setDate(setMonth(month1st, m => m + 1), () => 0);
       const dow1 = month1st.getDay();
       const dow1offset = dow1 == 0 ? 6 : dow1 - 1;
-      const tdButtons = this.querySelectorAll('tbody > tr > td > button');
+      const tdButtons = this.querySelectorAll(DATE_BUTTONS_SEL);
 
       for (let idx = 0; idx < dow1offset; idx++) {
         const btn = tdButtons[idx];
