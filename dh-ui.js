@@ -509,37 +509,38 @@ function $$(s) { return document.querySelectorAll(s); }
     #btnNextMonth = h('button.button', {}, [h('span.icon.is-small', {}, '▶')]);
     #btnToday = h('button.button.is-small.is-flex-grow-1', {}, '');
 
+    #headerRow = h('div.field is-grouped', {}, [
+      h('p.control', {}, [this.#btnPrevMonth]),
+      h('p.control.is-flex.is-flex-grow-1', {}, this.#btnMonth),
+      h('p.control', {}, this.#btnNextMonth),
+    ]);
+
+    #tbody = h('tbody', {}, genArray(6, () =>
+      h('tr', {}, genArray(7, () =>
+        h('td', {}, h('button.button.is-small.is-fullwidth.is-white', {}, ''))))));
+
+    #monthView = h('div.dropdown-item', {}, [
+      h('div.block', {}, this.#headerRow),
+      h('table.block.is-narrow.table', {}, [
+        h('thead', {}, weekdays.map(d => h('th.has-text-right.pr-3', {}, weekdayFmt.format(d)))),
+        this.#tbody,
+      ]),
+      h('div.block', {},
+        h('div.field.is-grouped', {}, [
+          h('p.control.is-flex.is-flex-grow-1', {}, this.#btnToday)
+        ])
+      ),
+    ]);
+
     connectedCallback() {
       const inp = this.#input;
       const key = inp.id || crypto.randomUUID();
       const menuId = `calendar-menu-${key}`;
 
-      const headerRow = h('div.field is-grouped', {}, [
-        h('p.control', {}, [this.#btnPrevMonth]),
-        h('p.control.is-flex.is-flex-grow-1', {}, this.#btnMonth),
-        h('p.control', {}, this.#btnNextMonth),
-      ]);
-
-      const tbody = h('tbody', {}, genArray(6, () =>
-        h('tr', {}, genArray(7, () =>
-          h('td', {}, h('button.button.is-small.is-fullwidth.is-white', {}, ''))))));
-
       inp.setAttribute('aria-controls', menuId);
 
       this.appendChild(h('div.dropdown-menu', { id: menuId, role: 'menu' },
-        h('div.dropdown-content', {},
-          h('div.dropdown-item', {}, [
-            h('div.block', {}, headerRow),
-            h('table.block.is-narrow.table', {}, [
-              h('thead', {}, weekdays.map(d => h('th.has-text-right.pr-3', {}, weekdayFmt.format(d)))),
-              tbody,
-            ]),
-            h('div.block', {},
-              h('div.field.is-grouped', {}, [
-                h('p.control.is-flex.is-flex-grow-1', {}, this.#btnToday)
-              ])
-            ),
-          ]))));
+        h('div.dropdown-content', {}, [this.#monthView])));
 
       inp.addEventListener('focus', () => {
         this.#render(this.#date);
@@ -565,7 +566,7 @@ function $$(s) { return document.querySelectorAll(s); }
         this.#render(dateFromISO(notNull(this.#btnPrevMonth.getAttribute('value'))));
       });
 
-      headerRow.addEventListener('keydown', evt => {
+      this.#headerRow.addEventListener('keydown', evt => {
         const elem = evt.target;
 
         if (elem instanceof HTMLButtonElement) {
@@ -593,13 +594,17 @@ function $$(s) { return document.querySelectorAll(s); }
         this.#render(dateFromISO(notNull(this.#btnNextMonth.getAttribute('value'))));
       });
 
+      this.#btnMonth.addEventListener('click', () => {
+        this.#renderYear();
+      });
+
       this.#btnToday.addEventListener('click', () => {
         inp.value = notNull(this.#btnToday.getAttribute('value'));
         deactivate(this);
         this.#valid = true;
       });
 
-      tbody.addEventListener('keydown', evt => {
+      this.#tbody.addEventListener('keydown', evt => {
         const elem = evt.target;
 
         if (elem instanceof HTMLButtonElement) {
@@ -637,7 +642,7 @@ function $$(s) { return document.querySelectorAll(s); }
         }
       });
 
-      tbody.addEventListener('click', evt => {
+      this.#tbody.addEventListener('click', evt => {
         const elem = evt.target;
 
         if (elem instanceof HTMLButtonElement) {
@@ -683,19 +688,20 @@ function $$(s) { return document.querySelectorAll(s); }
 
       // Last day of the previous month
       const prevMonth = setDate(dt, () => 0);
-      this.#btnPrevMonth.setAttribute('title', headerFmt.format(prevMonth));
-      this.#btnPrevMonth.setAttribute('value', yyyyMMdd(prevMonth));
+      this.#btnPrevMonth.title = headerFmt.format(prevMonth);
+      this.#btnPrevMonth.value = yyyyMMdd(prevMonth);
 
       // First day of the next month
       const nextMonth = setDate(setMonth(dt, m => m + 1), () => 1);
-      this.#btnNextMonth.setAttribute('title', headerFmt.format(nextMonth));
-      this.#btnNextMonth.setAttribute('value', yyyyMMdd(nextMonth));
+      this.#btnNextMonth.title = headerFmt.format(nextMonth);
+      this.#btnNextMonth.value = yyyyMMdd(nextMonth);
 
       this.#btnMonth.textContent = monthFmt.format(dt);
+      this.#btnMonth.value = yyyyMMdd(dt);
 
       const today = new Date();
       this.#btnToday.textContent = dateFmt.format(today);
-      this.#btnToday.setAttribute('value', yyyyMMdd(today));
+      this.#btnToday.value = yyyyMMdd(today);
 
       const month1st = setDate(dt, () => 1);
       const monthLast = setDate(setMonth(month1st, m => m + 1), () => 0);
@@ -711,7 +717,7 @@ function $$(s) { return document.querySelectorAll(s); }
         nowhite(btn);
         light(btn);
         btn.textContent = dayFmt.format(btnDate);
-        btn.setAttribute('value', yyyyMMdd(btnDate));
+        btn.value = yyyyMMdd(btnDate);
       }
 
       for (let day = 1; day <= monthLast.getDate(); day++) {
@@ -719,7 +725,7 @@ function $$(s) { return document.querySelectorAll(s); }
         const dayDate = setDate(month1st, () => day);
 
         btn.textContent = dayFmt.format(dayDate);
-        btn.setAttribute('value', yyyyMMdd(dayDate));
+        btn.value = yyyyMMdd(dayDate);
         nolight(btn);
         white(btn);
 
@@ -736,12 +742,16 @@ function $$(s) { return document.querySelectorAll(s); }
         const btnDate = setDate(monthLast, d => d + day);
 
         btn.textContent = dayFmt.format(btnDate);
-        btn.setAttribute('value', yyyyMMdd(btnDate));
+        btn.value = yyyyMMdd(btnDate);
         noprimary(btn);
         nowhite(btn);
         light(btn);
         day++;
       }
+    }
+
+    #renderYear() {
+      hide(this.#monthView);
     }
   });
 })();
