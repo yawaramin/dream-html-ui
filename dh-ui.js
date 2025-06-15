@@ -492,20 +492,21 @@ function $$(s) { return document.querySelectorAll(s); }
   const DATE_BUTTONS_SEL = 'tbody > tr > td > button';
 
   customElements.define('dh-datepicker', class extends HTMLElement {
+    /** @type {HTMLInputElement} */
     #input = notNull(this.querySelector('input'));
 
-    #btnPrevMonth = h('button.button', {}, [
+    #btnLeft = /** @type {HTMLButtonElement} */(h('button.button', {}, [
       h('span.icon is-small', {}, '◀'),
-    ]);
+    ]));
 
-    #btnMonth = h('button.button.is-flex-grow-1', {}, '');
-    #btnNextMonth = h('button.button', {}, [h('span.icon.is-small', {}, '▶')]);
-    #btnToday = h('button.button.is-small.is-flex-grow-1', {}, '');
+    #btnMonth = /** @type {HTMLButtonElement} */(h('button.button.is-flex-grow-1', {}, ''));
+    #btnRight = /** @type {HTMLButtonElement} */(h('button.button', {}, [h('span.icon.is-small', {}, '▶')]));
+    #btnToday = /** @type {HTMLButtonElement} */(h('button.button.is-small.is-flex-grow-1', {}, ''));
 
     #headerRow = h('div.field is-grouped', {}, [
-      h('p.control', {}, [this.#btnPrevMonth]),
+      h('p.control', {}, [this.#btnLeft]),
       h('p.control.is-flex.is-flex-grow-1', {}, this.#btnMonth),
-      h('p.control', {}, this.#btnNextMonth),
+      h('p.control', {}, this.#btnRight),
     ]);
 
     #tbody = h('tbody', {}, genArray(6, () =>
@@ -526,16 +527,15 @@ function $$(s) { return document.querySelectorAll(s); }
     ]);
 
     connectedCallback() {
-      const inp = this.#input;
-      const key = inp.id || crypto.randomUUID();
+      const key = this.#input.id || crypto.randomUUID();
       const menuId = `calendar-menu-${key}`;
 
-      inp.setAttribute('aria-controls', menuId);
+      this.#input.setAttribute('aria-controls', menuId);
 
       this.appendChild(h('div.dropdown-menu', { id: menuId, role: 'menu' },
         h('div.dropdown-content', {}, [this.#monthView])));
 
-      inp.addEventListener('focus', () => {
+      this.#input.addEventListener('focus', () => {
         this.#render(this.#date);
 
         if (!isActive(this)) {
@@ -543,7 +543,7 @@ function $$(s) { return document.querySelectorAll(s); }
         }
       });
 
-      inp.addEventListener('keydown', evt => {
+      this.#input.addEventListener('keydown', evt => {
         switch (evt.key) {
           case ESC:
             deactivate(this);
@@ -555,8 +555,8 @@ function $$(s) { return document.querySelectorAll(s); }
         }
       });
 
-      this.#btnPrevMonth.addEventListener('click', () => {
-        this.#render(dateFromISO(notNull(this.#btnPrevMonth.getAttribute('value'))));
+      this.#btnLeft.addEventListener('click', () => {
+        this.#render(dateFromISO(notNull(this.#btnLeft.value)));
       });
 
       this.#headerRow.addEventListener('keydown', evt => {
@@ -583,8 +583,8 @@ function $$(s) { return document.querySelectorAll(s); }
         }
       });
 
-      this.#btnNextMonth.addEventListener('click', () => {
-        this.#render(dateFromISO(notNull(this.#btnNextMonth.getAttribute('value'))));
+      this.#btnRight.addEventListener('click', () => {
+        this.#render(dateFromISO(notNull(this.#btnRight.value)));
       });
 
       this.#btnMonth.addEventListener('click', () => {
@@ -592,7 +592,7 @@ function $$(s) { return document.querySelectorAll(s); }
       });
 
       this.#btnToday.addEventListener('click', () => {
-        inp.value = notNull(this.#btnToday.getAttribute('value'));
+        this.#input.value = notNull(this.#btnToday.value);
         deactivate(this);
         this.#valid = true;
       });
@@ -639,7 +639,7 @@ function $$(s) { return document.querySelectorAll(s); }
         const elem = evt.target;
 
         if (elem instanceof HTMLButtonElement) {
-          inp.value = notNull(elem.getAttribute('value'));
+          this.#input.value = notNull(elem.value);
           deactivate(this);
           this.#valid = true;
         }
@@ -655,14 +655,12 @@ function $$(s) { return document.querySelectorAll(s); }
     }
 
     set #valid(value) {
-      const inp = this.#input;
-
       if (value) {
-        nodanger(inp);
-        success(inp);
+        nodanger(this.#input);
+        success(this.#input);
       } else {
-        nosuccess(inp);
-        danger(inp);
+        nosuccess(this.#input);
+        danger(this.#input);
       }
     }
 
@@ -681,13 +679,13 @@ function $$(s) { return document.querySelectorAll(s); }
 
       // Last day of the previous month
       const prevMonth = setDate(dt, () => 0);
-      this.#btnPrevMonth.title = headerFmt.format(prevMonth);
-      this.#btnPrevMonth.value = yyyyMMdd(prevMonth);
+      this.#btnLeft.title = headerFmt.format(prevMonth);
+      this.#btnLeft.value = yyyyMMdd(prevMonth);
 
       // First day of the next month
       const nextMonth = setDate(setMonth(dt, m => m + 1), () => 1);
-      this.#btnNextMonth.title = headerFmt.format(nextMonth);
-      this.#btnNextMonth.value = yyyyMMdd(nextMonth);
+      this.#btnRight.title = headerFmt.format(nextMonth);
+      this.#btnRight.value = yyyyMMdd(nextMonth);
 
       this.#btnMonth.textContent = monthFmt.format(dt);
       this.#btnMonth.value = yyyyMMdd(dt);
@@ -703,7 +701,7 @@ function $$(s) { return document.querySelectorAll(s); }
       const tdButtons = this.querySelectorAll(DATE_BUTTONS_SEL);
 
       for (let idx = 0; idx < dow1offset; idx++) {
-        const btn = tdButtons[idx];
+        const btn = /** @type {HTMLButtonElement} */(tdButtons[idx]);
         const btnDate = setDate(prevMonth, d => d - dow1offset + idx + 1);
 
         noprimary(btn);
@@ -714,7 +712,7 @@ function $$(s) { return document.querySelectorAll(s); }
       }
 
       for (let day = 1; day <= monthLast.getDate(); day++) {
-        const btn = tdButtons[dow1offset + day - 1];
+        const btn = /** @type {HTMLButtonElement} */(tdButtons[dow1offset + day - 1]);
         const dayDate = setDate(month1st, () => day);
 
         btn.textContent = dayFmt.format(dayDate);
@@ -731,7 +729,7 @@ function $$(s) { return document.querySelectorAll(s); }
 
       let day = 1;
       for (let idx = dow1offset + monthLast.getDate(); idx < tdButtons.length; idx++) {
-        const btn = tdButtons[idx];
+        const btn = /** @type {HTMLButtonElement} */(tdButtons[idx]);
         const btnDate = setDate(monthLast, d => d + day);
 
         btn.textContent = dayFmt.format(btnDate);
