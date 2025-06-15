@@ -503,28 +503,26 @@ function $$(s) { return document.querySelectorAll(s); }
     #btnRight = /** @type {HTMLButtonElement} */(h('button.button', {}, [h('span.icon.is-small', {}, '▶')]));
     #btnToday = /** @type {HTMLButtonElement} */(h('button.button.is-small.is-flex-grow-1', {}, ''));
 
-    #headerRow = h('div.field is-grouped', {}, [
+    #headerRow = h('div.dropdown-item', {}, h('div.field is-grouped', {}, [
       h('p.control', {}, [this.#btnLeft]),
       h('p.control.is-flex.is-flex-grow-1', {}, this.#btnMonth),
       h('p.control', {}, this.#btnRight),
-    ]);
+    ]));
 
     #tbody = h('tbody', {}, genArray(6, () =>
       h('tr', {}, genArray(7, () =>
         h('td', {}, h('button.button.is-small.is-fullwidth.is-white', {}, ''))))));
 
     #monthView = h('div.dropdown-item', {}, [
-      h('div.block', {}, this.#headerRow),
-      h('table.block.is-narrow.table', {}, [
+      h('table.is-narrow.table', {}, [
         h('thead', {}, weekdays.map(d => h('th.has-text-right.pr-3', {}, weekdayFmt.format(d)))),
         this.#tbody,
       ]),
-      h('div.block', {},
-        h('div.field.is-grouped', {}, [
-          h('p.control.is-flex.is-flex-grow-1', {}, this.#btnToday)
-        ])
-      ),
     ]);
+
+    #footerRow = h('div.dropdown-item', {},
+      h('div.field.is-grouped', {},
+        h('p.control.is-flex.is-flex-grow-1', {}, this.#btnToday)));
 
     connectedCallback() {
       const key = this.#input.id || crypto.randomUUID();
@@ -533,7 +531,7 @@ function $$(s) { return document.querySelectorAll(s); }
       this.#input.setAttribute('aria-controls', menuId);
 
       this.appendChild(h('div.dropdown-menu', { id: menuId, role: 'menu' },
-        h('div.dropdown-content', {}, [this.#monthView])));
+        h('div.dropdown-content', {}, [this.#headerRow, this.#monthView, this.#footerRow])));
 
       this.#input.addEventListener('focus', () => {
         this.#render(this.#date);
@@ -573,7 +571,7 @@ function $$(s) { return document.querySelectorAll(s); }
               break;
 
             case UP_ARROW:
-              inp.focus();
+              this.#input.focus();
               break;
 
             case DOWN_ARROW:
