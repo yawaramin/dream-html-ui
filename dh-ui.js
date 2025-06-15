@@ -190,6 +190,8 @@ function $$(s) { return document.querySelectorAll(s); }
     /** @type {MutationObserver | null} */
     #listObserver = null;
 
+    #input = notNull(this.querySelector('input'));
+
     /** @type {string | null} */
     #list = null;
 
@@ -243,11 +245,6 @@ function $$(s) { return document.querySelectorAll(s); }
         loaded(trigger);
         show(icon);
       }
-    }
-
-    /** @type {HTMLInputElement} */
-    get input() {
-      return notNull(this.querySelector('input'));
     }
 
     /** @type {HTMLDivElement} */
@@ -332,18 +329,16 @@ function $$(s) { return document.querySelectorAll(s); }
     }
 
     connectedCallback() {
-      const inp = this.input;
-
-      inp.addEventListener('focus', () => {
+      this.#input.addEventListener('focus', () => {
         if (!isActive(this)) {
           activate(this);
         }
       });
 
-      inp.addEventListener('keydown', evt => {
+      this.#input.addEventListener('keydown', evt => {
         switch (evt.key) {
           case ESC:
-            inp.blur();
+            this.#input.blur();
             deactivate(this);
             break;
 
@@ -361,8 +356,8 @@ function $$(s) { return document.querySelectorAll(s); }
         }
       });
 
-      inp.addEventListener('keyup', evt => this.#handleChange(evt));
-      inp.addEventListener('search', evt => this.#handleChange(evt));
+      this.#input.addEventListener('keyup', () => this.#handleChange());
+      this.#input.addEventListener('search', () => this.#handleChange());
 
       const content = this.dropdownContent;
 
@@ -371,7 +366,7 @@ function $$(s) { return document.querySelectorAll(s); }
           const item = evt.target;
 
           evt.preventDefault();
-          inp.value = notNull(item.getAttribute('value'));
+          this.#input.value = notNull(item.getAttribute('value'));
 
           deactivate(this.selectedItem);
           activate(item);
@@ -403,7 +398,7 @@ function $$(s) { return document.querySelectorAll(s); }
                 }
               }
 
-              inp.focus();
+              this.#input.focus();
               break;
 
             case ESC:
@@ -414,9 +409,7 @@ function $$(s) { return document.querySelectorAll(s); }
       });
     }
 
-    #handleChange(evt) {
-      const inp = evt.target;
-
+    #handleChange() {
       if (!isActive(this)) {
         activate(this);
       }
@@ -426,13 +419,13 @@ function $$(s) { return document.querySelectorAll(s); }
       for (const item of this.allItems) {
         const content = notNull(item.textContent).trim().replace(WS, ' ');
 
-        if (content.toLowerCase().includes(inp.value.toLowerCase())) {
+        if (content.toLowerCase().includes(this.#input.value.toLowerCase())) {
           show(item);
         } else {
           hide(item);
         }
 
-        if (content == inp.value) {
+        if (content == this.#input.value) {
           activate(item);
         }
       }
