@@ -474,7 +474,8 @@ function $$(s) { return document.querySelectorAll(s); }
   }
 
   const headerFmt = new Intl.DateTimeFormat(navigator.language, { month: 'long', year: 'numeric' });
-  const monthFmt = new Intl.DateTimeFormat(navigator.language, { month: 'long', year: 'numeric' });
+  const monthYearFmt = new Intl.DateTimeFormat(navigator.language, { month: 'long', year: 'numeric' });
+  const monthFmt = new Intl.DateTimeFormat(navigator.language, { month: 'short' });
   const weekdayFmt = new Intl.DateTimeFormat(navigator.language, { weekday: 'narrow' });
   const dateFmt = new Intl.DateTimeFormat(navigator.language, { dateStyle: 'long' });
   const dayFmt = new Intl.DateTimeFormat(navigator.language, { day: 'numeric' });
@@ -489,9 +490,15 @@ function $$(s) { return document.querySelectorAll(s); }
     new Date('2025-06-15T00:00'),
   ];
 
-  const DATE_BUTTONS_SEL = 'tbody > tr > td > button';
+  const DATE_BUTTONS_SEL = 'tr > td > button';
+
+  function monthBtn(dt) {
+    return h('td', {}, h('button.button.is-fullwidth.is-white', {}, monthFmt.format(dt)));
+  }
 
   customElements.define('dh-datepicker', class extends HTMLElement {
+    #minWidth = 0;
+
     /** @type {HTMLInputElement} */
     #input = notNull(this.querySelector('input'));
 
@@ -499,26 +506,35 @@ function $$(s) { return document.querySelectorAll(s); }
       h('span.icon is-small', {}, '◀'),
     ]));
 
-    #btnMonth = /** @type {HTMLButtonElement} */(h('button.button.is-flex-grow-1', {}, ''));
+    #btnMonthYear = /** @type {HTMLButtonElement} */(h('button.button.is-fullwidth', {}, ''));
     #btnRight = /** @type {HTMLButtonElement} */(h('button.button', {}, [h('span.icon.is-small', {}, '▶')]));
-    #btnToday = /** @type {HTMLButtonElement} */(h('button.button.is-small.is-flex-grow-1', {}, ''));
+    #btnToday = /** @type {HTMLButtonElement} */(h('button.button.is-small.is-fullwidth', {}, ''));
 
     #headerRow = h('div.dropdown-item', {}, h('div.field is-grouped', {}, [
       h('p.control', {}, [this.#btnLeft]),
-      h('p.control.is-flex.is-flex-grow-1', {}, this.#btnMonth),
+      h('p.control.is-flex.is-flex-grow-1', {}, this.#btnMonthYear),
       h('p.control', {}, this.#btnRight),
     ]));
 
-    #tbody = h('tbody', {}, genArray(6, () =>
+    #monthViewTbody = h('tbody', {}, genArray(6, () =>
       h('tr', {}, genArray(7, () =>
         h('td', {}, h('button.button.is-small.is-fullwidth.is-white', {}, ''))))));
 
-    #monthView = h('div.dropdown-item', {}, [
+    #monthView = h('div.dropdown-item', {},
       h('table.is-narrow.table', {}, [
         h('thead', {}, weekdays.map(d => h('th.has-text-right.pr-3', {}, weekdayFmt.format(d)))),
-        this.#tbody,
-      ]),
+        this.#monthViewTbody,
+      ]));
+
+    #yearViewTbody = h('tbody', {}, [
+      h('tr', {}, [0, 1, 2].map(monthIdx => monthBtn(setMonth(weekdays[0], () => monthIdx)))),
+      h('tr', {}, [3, 4, 5].map(monthIdx => monthBtn(setMonth(weekdays[0], () => monthIdx)))),
+      h('tr', {}, [6, 7, 8].map(monthIdx => monthBtn(setMonth(weekdays[0], () => monthIdx)))),
+      h('tr', {}, [9, 10, 11].map(monthIdx => monthBtn(setMonth(weekdays[0], () => monthIdx)))),
     ]);
+
+    #yearView = h('div.dropdown-item.is-hidden', {},
+      h('table.table.is-fullwidth', {}, this.#yearViewTbody));
 
     #footerRow = h('div.dropdown-item', {},
       h('div.field.is-grouped', {},
@@ -531,13 +547,23 @@ function $$(s) { return document.querySelectorAll(s); }
       this.#input.setAttribute('aria-controls', menuId);
 
       this.appendChild(h('div.dropdown-menu', { id: menuId, role: 'menu' },
-        h('div.dropdown-content', {}, [this.#headerRow, this.#monthView, this.#footerRow])));
+        h('div.dropdown-content', {}, [
+          this.#headerRow,
+          this.#yearView,
+          this.#monthView,
+          this.#footerRow,
+        ])));
 
       this.#input.addEventListener('focus', () => {
         this.#render(this.#date);
 
         if (!isActive(this)) {
           activate(this);
+
+          if (this.#minWidth == 0) {
+            this.#minWidth = this.#monthView.offsetWidth;
+            this.#yearView.style.minWidth = `${this.#minWidth}px`;
+          }
         }
       });
 
@@ -548,7 +574,7 @@ function $$(s) { return document.querySelectorAll(s); }
             break;
 
           case DOWN_ARROW:
-            this.#btnMonth.focus();
+            this.#btnMonthYear.focus();
             break;
         }
       });
@@ -575,7 +601,7 @@ function $$(s) { return document.querySelectorAll(s); }
               break;
 
             case DOWN_ARROW:
-              this.querySelector(DATE_BUTTONS_SEL)?.focus();
+              this.querySelector('.dropdown-item:not(.is-hidden) > .table > tbody > tr > td > .button')?.focus();
               break;
           }
         }
@@ -585,7 +611,7 @@ function $$(s) { return document.querySelectorAll(s); }
         this.#render(dateFromISO(notNull(this.#btnRight.value)));
       });
 
-      this.#btnMonth.addEventListener('click', () => {
+      this.#btnMonthYear.addEventListener('click', () => {
         this.#renderYear();
       });
 
@@ -595,45 +621,10 @@ function $$(s) { return document.querySelectorAll(s); }
         this.#valid = true;
       });
 
-      this.#tbody.addEventListener('keydown', evt => {
-        const elem = evt.target;
+      this.#monthViewTbody.addEventListener('keydown', evt => this.#handleTbodyKeydown(evt));
+      this.#yearViewTbody.addEventListener('keydown', evt => this.#handleTbodyKeydown(evt));
 
-        if (elem instanceof HTMLButtonElement) {
-          switch (evt.key) {
-            case LEFT_ARROW:
-              elem.parentNode?.previousSibling?.firstChild?.focus();
-              break;
-
-            case RIGHT_ARROW:
-              elem.parentNode?.nextSibling?.firstChild?.focus();
-              break;
-
-            case UP_ARROW:
-              const prevRow = elem.parentNode?.parentNode?.previousSibling;
-
-              if (prevRow == null) {
-                this.#btnMonth.focus();
-              } else {
-                prevRow.childNodes[Array.from(elem.parentNode.parentNode.childNodes).indexOf(elem.parentNode)]?.firstChild?.focus();
-              }
-
-              break;
-
-            case DOWN_ARROW:
-              const nextRow = elem.parentNode?.parentNode?.nextSibling;
-
-              if (nextRow == null) {
-                this.#btnToday.focus();
-              } else {
-                nextRow.childNodes[Array.from(elem.parentNode.parentNode.childNodes).indexOf(elem.parentNode)]?.firstChild?.focus();
-              }
-
-              break;
-          }
-        }
-      });
-
-      this.#tbody.addEventListener('click', evt => {
+      this.#monthViewTbody.addEventListener('click', evt => {
         const elem = evt.target;
 
         if (elem instanceof HTMLButtonElement) {
@@ -645,11 +636,49 @@ function $$(s) { return document.querySelectorAll(s); }
 
       this.#btnToday.addEventListener('keydown', evt => {
         if (evt.key == UP_ARROW) {
-          this.querySelector('tbody > tr:last-child > td > button')?.focus();
+          this.querySelector('.dropdown-item:not(.is-hidden) > .table > tbody > tr:last-child > td > .button')?.focus();
         }
       });
 
       this.#render(this.#date);
+    }
+
+    #handleTbodyKeydown(evt) {
+      const elem = evt.target;
+
+      if (elem instanceof HTMLButtonElement) {
+        switch (evt.key) {
+          case LEFT_ARROW:
+            elem.parentNode?.previousSibling?.firstChild?.focus();
+            break;
+
+          case RIGHT_ARROW:
+            elem.parentNode?.nextSibling?.firstChild?.focus();
+            break;
+
+          case UP_ARROW:
+            const prevRow = elem.parentNode?.parentNode?.previousSibling;
+
+            if (prevRow == null) {
+              this.#btnMonthYear.focus();
+            } else {
+              prevRow.childNodes[Array.from(elem.parentNode.parentNode.childNodes).indexOf(elem.parentNode)]?.firstChild?.focus();
+            }
+
+            break;
+
+          case DOWN_ARROW:
+            const nextRow = elem.parentNode?.parentNode?.nextSibling;
+
+            if (nextRow == null) {
+              this.#btnToday.focus();
+            } else {
+              nextRow.childNodes[Array.from(elem.parentNode.parentNode.childNodes).indexOf(elem.parentNode)]?.firstChild?.focus();
+            }
+
+            break;
+        }
+      }
     }
 
     set #valid(value) {
@@ -685,8 +714,8 @@ function $$(s) { return document.querySelectorAll(s); }
       this.#btnRight.title = headerFmt.format(nextMonth);
       this.#btnRight.value = yyyyMMdd(nextMonth);
 
-      this.#btnMonth.textContent = monthFmt.format(dt);
-      this.#btnMonth.value = yyyyMMdd(dt);
+      this.#btnMonthYear.textContent = monthYearFmt.format(dt);
+      this.#btnMonthYear.value = yyyyMMdd(dt);
 
       const today = new Date();
       this.#btnToday.textContent = dateFmt.format(today);
@@ -696,7 +725,7 @@ function $$(s) { return document.querySelectorAll(s); }
       const monthLast = setDate(setMonth(month1st, m => m + 1), () => 0);
       const dow1 = month1st.getDay();
       const dow1offset = dow1 == 0 ? 6 : dow1 - 1;
-      const tdButtons = this.querySelectorAll(DATE_BUTTONS_SEL);
+      const tdButtons = this.#monthViewTbody.querySelectorAll(DATE_BUTTONS_SEL);
 
       for (let idx = 0; idx < dow1offset; idx++) {
         const btn = /** @type {HTMLButtonElement} */(tdButtons[idx]);
@@ -741,6 +770,7 @@ function $$(s) { return document.querySelectorAll(s); }
 
     #renderYear() {
       hide(this.#monthView);
+      show(this.#yearView);
     }
   });
 })();
