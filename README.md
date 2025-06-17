@@ -44,7 +44,7 @@ Use the following as a starting point:
   <script src="dh-ui.js"></script>
 </body>
 
-<
+</html>
 ```
 
 ### Combobox
