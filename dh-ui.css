@@ -1,0 +1,14 @@
+dh-datepicker .table {
+  --bulma-table-cell-border-width: 0;
+  --bulma-table-cell-padding: 0;
+  --bulma-table-cell-border-color: var(--bulma-table-background-color);
+
+  & .button {
+    border-radius: 0;
+  }
+}
+
+dh-datepicker .table.is-narrow td,
+dh-datepicker .table.is-narrow th {
+  padding: 0;
+}
