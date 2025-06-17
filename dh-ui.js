@@ -604,6 +604,7 @@ function $$(s) { return document.querySelectorAll(s); }
       this.#input.addEventListener('keydown', evt => {
         switch (evt.key) {
           case ESC:
+            this.#input.blur();
             deactivate(this);
             break;
 
