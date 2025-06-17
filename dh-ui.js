@@ -100,12 +100,19 @@ function $$(s) { return document.querySelectorAll(s); }
     el?.classList.remove('is-success');
   }
 
+  /** @type {(el: Element | null) => boolean} */
   function isActive(el) {
     return el != null && el.classList.contains(IS_ACTIVE);
   }
 
+  /** @type {(el: Element | null) => boolean} */
   function isDanger(el) {
     return el != null && el.classList.contains('is-danger');
+  }
+
+  /** @type {(el: Element | null) => boolean} */
+  function isHidden(el) {
+    return el != null && el.classList.contains('is-hidden');
   }
 
   /** @type {(tag: string, attrs: Record<string, string> | null, children: Array<Element | string> | Element | string | null) => Element} */
@@ -473,7 +480,15 @@ function $$(s) { return document.querySelectorAll(s); }
     return newDate;
   }
 
-  const headerFmt = new Intl.DateTimeFormat(navigator.language, { month: 'long', year: 'numeric' });
+  /** @type {(dt: Date, f: (month: number) => number) => Date} */
+  function setYear(dt, f) {
+    const newDate = new Date(dt);
+    newDate.setFullYear(f(newDate.getFullYear()));
+
+    return newDate;
+  }
+
+  const yearFmt = new Intl.DateTimeFormat(navigator.language, { year: 'numeric' });
   const monthYearFmt = new Intl.DateTimeFormat(navigator.language, { month: 'long', year: 'numeric' });
   const monthFmt = new Intl.DateTimeFormat(navigator.language, { month: 'short' });
   const weekdayFmt = new Intl.DateTimeFormat(navigator.language, { weekday: 'narrow' });
@@ -510,21 +525,21 @@ function $$(s) { return document.querySelectorAll(s); }
     #btnRight = /** @type {HTMLButtonElement} */(h('button.button', {}, [h('span.icon.is-small', {}, '▶')]));
     #btnToday = /** @type {HTMLButtonElement} */(h('button.button.is-small.is-fullwidth', {}, ''));
 
-    #headerRow = h('div.dropdown-item', {}, h('div.field is-grouped', {}, [
+    #headerRow = /** @type {HTMLDivElement} */(h('div.dropdown-item', {}, h('div.field is-grouped', {}, [
       h('p.control', {}, [this.#btnLeft]),
       h('p.control.is-flex.is-flex-grow-1', {}, this.#btnMonthYear),
       h('p.control', {}, this.#btnRight),
-    ]));
+    ])));
 
     #monthViewTbody = h('tbody', {}, genArray(6, () =>
       h('tr', {}, genArray(7, () =>
         h('td', {}, h('button.button.is-small.is-fullwidth.is-white', {}, ''))))));
 
-    #monthView = h('div.dropdown-item', {},
+    #monthView = /** @type {HTMLDivElement} */(h('div.dropdown-item', {},
       h('table.is-narrow.table', {}, [
         h('thead', {}, weekdays.map(d => h('th.has-text-right.pr-3', {}, weekdayFmt.format(d)))),
         this.#monthViewTbody,
-      ]));
+      ])));
 
     #yearViewTbody = h('tbody', {}, [
       h('tr', {}, [0, 1, 2].map(monthIdx => monthBtn(setMonth(weekdays[0], () => monthIdx)))),
@@ -533,8 +548,8 @@ function $$(s) { return document.querySelectorAll(s); }
       h('tr', {}, [9, 10, 11].map(monthIdx => monthBtn(setMonth(weekdays[0], () => monthIdx)))),
     ]);
 
-    #yearView = h('div.dropdown-item.is-hidden', {},
-      h('table.table.is-fullwidth', {}, this.#yearViewTbody));
+    #yearView = /** @type {HTMLDivElement} */(h('div.dropdown-item.is-hidden', {},
+      h('table.table.is-fullwidth', {}, this.#yearViewTbody)));
 
     #footerRow = h('div.dropdown-item', {},
       h('div.field.is-grouped', {},
@@ -555,9 +570,10 @@ function $$(s) { return document.querySelectorAll(s); }
         ])));
 
       this.#input.addEventListener('focus', () => {
-        this.#render(this.#date);
-
         if (!isActive(this)) {
+          hide(this.#yearView);
+          show(this.#monthView);
+          this.#render(this.#date);
           activate(this);
 
           if (this.#minWidth == 0) {
@@ -612,7 +628,17 @@ function $$(s) { return document.querySelectorAll(s); }
       });
 
       this.#btnMonthYear.addEventListener('click', () => {
-        this.#renderYear();
+        const dt = dateFromISO(notNull(this.#btnMonthYear.value));
+
+        if (this.#isYearView) {
+          hide(this.#yearView);
+          show(this.#monthView);
+          this.#render(dt);
+        } else {
+          hide(this.#monthView);
+          show(this.#yearView);
+          this.#render(dt);
+        }
       });
 
       this.#btnToday.addEventListener('click', () => {
@@ -634,13 +660,23 @@ function $$(s) { return document.querySelectorAll(s); }
         }
       });
 
+      this.#yearViewTbody.addEventListener('click', evt => {
+        const elem = evt.target;
+
+        if (elem instanceof HTMLButtonElement) {
+          this.#render(dateFromISO(notNull(elem.value)));
+          hide(this.#yearView);
+          show(this.#monthView);
+          this.#render(dateFromISO(notNull(this.#btnMonthYear.value)));
+          this.#monthViewTbody.querySelector('.button')?.focus();
+        }
+      });
+
       this.#btnToday.addEventListener('keydown', evt => {
         if (evt.key == UP_ARROW) {
           this.querySelector('.dropdown-item:not(.is-hidden) > .table > tbody > tr:last-child > td > .button')?.focus();
         }
       });
-
-      this.#render(this.#date);
     }
 
     #handleTbodyKeydown(evt) {
@@ -681,6 +717,10 @@ function $$(s) { return document.querySelectorAll(s); }
       }
     }
 
+    get #isYearView() {
+      return !isHidden(this.#yearView);
+    }
+
     set #valid(value) {
       if (value) {
         nodanger(this.#input);
@@ -703,19 +743,32 @@ function $$(s) { return document.querySelectorAll(s); }
 
     #render(dt) {
       const currDate = this.#date;
-
-      // Last day of the previous month
       const prevMonth = setDate(dt, () => 0);
-      this.#btnLeft.title = headerFmt.format(prevMonth);
-      this.#btnLeft.value = yyyyMMdd(prevMonth);
 
-      // First day of the next month
-      const nextMonth = setDate(setMonth(dt, m => m + 1), () => 1);
-      this.#btnRight.title = headerFmt.format(nextMonth);
-      this.#btnRight.value = yyyyMMdd(nextMonth);
+      if (this.#isYearView) {
+        const prevYear = setYear(setMonth(setDate(dt, () => 1), () => 0), y => y - 1);
+        this.#btnLeft.title = yearFmt.format(prevYear);
+        this.#btnLeft.value = yyyyMMdd(prevYear);
 
-      this.#btnMonthYear.textContent = monthYearFmt.format(dt);
-      this.#btnMonthYear.value = yyyyMMdd(dt);
+        const nextYear = setYear(setMonth(setDate(dt, () => 1), () => 0), y => y + 1);
+        this.#btnRight.title = yearFmt.format(nextYear);
+        this.#btnRight.value = yyyyMMdd(nextYear);
+
+        this.#btnMonthYear.textContent = yearFmt.format(dt);
+        this.#btnMonthYear.value = yyyyMMdd(dt);
+      } else {
+        // Last day of the previous month
+        this.#btnLeft.title = monthYearFmt.format(prevMonth);
+        this.#btnLeft.value = yyyyMMdd(prevMonth);
+
+        // First day of the next month
+        const nextMonth = setDate(setMonth(dt, m => m + 1), () => 1);
+        this.#btnRight.title = monthYearFmt.format(nextMonth);
+        this.#btnRight.value = yyyyMMdd(nextMonth);
+
+        this.#btnMonthYear.textContent = monthYearFmt.format(dt);
+        this.#btnMonthYear.value = yyyyMMdd(dt);
+      }
 
       const today = new Date();
       this.#btnToday.textContent = dateFmt.format(today);
@@ -725,10 +778,15 @@ function $$(s) { return document.querySelectorAll(s); }
       const monthLast = setDate(setMonth(month1st, m => m + 1), () => 0);
       const dow1 = month1st.getDay();
       const dow1offset = dow1 == 0 ? 6 : dow1 - 1;
-      const tdButtons = this.#monthViewTbody.querySelectorAll(DATE_BUTTONS_SEL);
+      const monthButtons = this.#monthViewTbody.querySelectorAll(DATE_BUTTONS_SEL);
+      const yearButtons = this.#yearViewTbody.querySelectorAll(DATE_BUTTONS_SEL);
+
+      for (let idx = 0; idx < 12; idx++) {
+      /** @type {HTMLButtonElement} */(yearButtons[idx]).value = yyyyMMdd(setDate(setMonth(dt, () => idx), () => 1));
+      }
 
       for (let idx = 0; idx < dow1offset; idx++) {
-        const btn = /** @type {HTMLButtonElement} */(tdButtons[idx]);
+        const btn = /** @type {HTMLButtonElement} */(monthButtons[idx]);
         const btnDate = setDate(prevMonth, d => d - dow1offset + idx + 1);
 
         noprimary(btn);
@@ -739,7 +797,7 @@ function $$(s) { return document.querySelectorAll(s); }
       }
 
       for (let day = 1; day <= monthLast.getDate(); day++) {
-        const btn = /** @type {HTMLButtonElement} */(tdButtons[dow1offset + day - 1]);
+        const btn = /** @type {HTMLButtonElement} */(monthButtons[dow1offset + day - 1]);
         const dayDate = setDate(month1st, () => day);
 
         btn.textContent = dayFmt.format(dayDate);
@@ -755,8 +813,8 @@ function $$(s) { return document.querySelectorAll(s); }
       }
 
       let day = 1;
-      for (let idx = dow1offset + monthLast.getDate(); idx < tdButtons.length; idx++) {
-        const btn = /** @type {HTMLButtonElement} */(tdButtons[idx]);
+      for (let idx = dow1offset + monthLast.getDate(); idx < monthButtons.length; idx++) {
+        const btn = /** @type {HTMLButtonElement} */(monthButtons[idx]);
         const btnDate = setDate(monthLast, d => d + day);
 
         btn.textContent = dayFmt.format(btnDate);
@@ -766,11 +824,6 @@ function $$(s) { return document.querySelectorAll(s); }
         light(btn);
         day++;
       }
-    }
-
-    #renderYear() {
-      hide(this.#monthView);
-      show(this.#yearView);
     }
   });
 })();
