@@ -1,20 +1,5 @@
-/*
-Copyright 2025 Yawar Amin
-
-This file is part of dream-html UI.
-
-dream-html UI is free software: you can redistribute it and/or modify it under
-the terms of the GNU General Public License as published by the Free Software
-Foundation, either version 3 of the License, or (at your option) any later
-version.
-
-dream-html UI is distributed in the hope that it will be useful, but WITHOUT
-ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
-FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License along with
-dream-html UI. If not, see <https://www.gnu.org/licenses/>.
-*/
+// @license magnet:?xt=urn:btih:1f739d935676111cfff4b4693e3816e664797050&dn=gpl-3.0.txt GPL-3.0
+// Copyright 2025 Yawar Amin
 
 /** @type {(s: string) => Element | null} */
 function $(s) { return document.querySelector(s); }
@@ -197,7 +182,9 @@ function $$(s) { return document.querySelectorAll(s); }
   document.body.addEventListener('focusout', evt => {
     const elem = evt.target;
 
-    if (elem instanceof HTMLInputElement || elem instanceof HTMLTextAreaElement || elem instanceof HTMLSelectElement) {
+    if (elem.ariaHasPopup == 'true') {
+      deactivate(elem);
+    } else if (elem instanceof HTMLInputElement || elem instanceof HTMLTextAreaElement || elem instanceof HTMLSelectElement) {
       if (elem.value == '') {
         nodanger(elem);
         nosuccess(elem);
@@ -846,3 +833,5 @@ function $$(s) { return document.querySelectorAll(s); }
     }
   });
 })();
+// @license-end
+
